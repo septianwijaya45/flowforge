@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\WorkflowEngine\Services;
 
 use Illuminate\Support\Carbon;
+use Modules\WorkflowEngine\Contracts\WorkflowExecutionLogContract;
 use Modules\WorkflowEngine\Contracts\WorkflowExecutionStatePersisterContract;
 use Modules\WorkflowEngine\Contracts\WorkflowRunBroadcastContract;
 use Modules\WorkflowEngine\DTOs\WorkflowExecutionResultDTO;
@@ -20,6 +21,7 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
 {
     public function __construct(
         private readonly WorkflowRunBroadcastContract $broadcaster,
+        private readonly WorkflowExecutionLogContract $executionLogger,
     ) {}
 
     public function initializeSteps(WorkflowRun $run, WorkflowGraphDTO $graph, array $layers): void
@@ -65,6 +67,7 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
         ])->save();
 
         $this->broadcaster->runUpdated($run->refresh());
+        $this->executionLogger->runStarted($run);
     }
 
     public function markStepRunning(WorkflowRunStep $step): void
@@ -75,6 +78,7 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
         ])->save();
 
         $this->broadcaster->stepUpdated($step->refresh());
+        $this->executionLogger->stepRunning($step);
     }
 
     public function markStepSuccess(WorkflowRunStep $step, WorkflowStepExecutionResultDTO $result): void
@@ -90,6 +94,10 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
         ])->save();
 
         $this->broadcaster->stepUpdated($step->refresh());
+        $this->executionLogger->stepSucceeded(
+            $step,
+            $result->durationMs ?? $step->duration_ms,
+        );
     }
 
     public function markStepFailed(WorkflowRunStep $step, WorkflowStepExecutionResultDTO $result): void
@@ -105,6 +113,11 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
         ])->save();
 
         $this->broadcaster->stepUpdated($step->refresh());
+        $this->executionLogger->stepFailed(
+            $step,
+            $result->error,
+            $result->durationMs ?? $step->duration_ms,
+        );
     }
 
     public function markRunSuccess(WorkflowRun $run, array $output): WorkflowExecutionResultDTO
@@ -117,6 +130,7 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
         ])->save();
 
         $this->broadcaster->runUpdated($run->refresh()->load('steps'));
+        $this->executionLogger->runSucceeded($run);
 
         return WorkflowExecutionResultDTO::success($run->id, $output);
     }
@@ -134,6 +148,7 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
         ])->save();
 
         $this->broadcaster->runUpdated($run->refresh()->load('steps'));
+        $this->executionLogger->runFailed($run, $failedStep->nodeId, $error);
 
         return WorkflowExecutionResultDTO::failed($run->id, $failedStep->nodeId, $error);
     }
@@ -150,6 +165,7 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
             ->update(['status' => WorkflowRunStepStatus::Cancelled]);
 
         $this->broadcaster->runUpdated($run->refresh()->load('steps'));
+        $this->executionLogger->runCancelled($run);
 
         return WorkflowExecutionResultDTO::cancelled($run->id);
     }
@@ -168,6 +184,7 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
         ])->save();
 
         $this->broadcaster->runUpdated($run->refresh()->load('steps'));
+        $this->executionLogger->runFailed($run, null, $error);
 
         return WorkflowExecutionResultDTO::failed($run->id, 'engine', $error);
     }

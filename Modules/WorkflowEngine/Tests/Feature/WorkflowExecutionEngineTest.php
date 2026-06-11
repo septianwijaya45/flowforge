@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
+use Modules\ExecutionLog\Contracts\ExecutionLogRepositoryContract;
+use Modules\ExecutionLog\Contracts\ExecutionLogWriterServiceContract;
 use Modules\Tenant\Models\Tenant;
 use Modules\Workflow\Enums\WorkflowStatus;
 use Modules\Workflow\Models\Workflow;
@@ -27,6 +31,21 @@ use Modules\WorkflowEngine\Services\WorkflowExecutionEngine;
 use Modules\WorkflowEngine\Services\WorkflowStepExecutorFactory;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    $connection = (string) config('execution_log.connection', 'execution_logs');
+    $schema = Schema::connection($connection);
+
+    $schema->dropIfExists('execution_logs');
+    $schema->dropIfExists('migrations');
+
+    Artisan::call('migrate', [
+        '--database' => $connection,
+        '--path' => base_path('Modules/ExecutionLog/Database/Migrations'),
+        '--realpath' => true,
+        '--force' => true,
+    ]);
+});
 
 final class LayerBatchTracker
 {
@@ -204,5 +223,23 @@ describe('WorkflowExecutionEngine', function (): void {
     it('is bound in the service container', function (): void {
         expect(app(WorkflowExecutionEngineContract::class))
             ->toBeInstanceOf(WorkflowExecutionEngine::class);
+    });
+
+    it('writes execution logs during workflow execution', function (): void {
+        $run = createPendingWorkflowRun();
+
+        app(WorkflowExecutionEngineContract::class)->execute(
+            new ExecuteWorkflowRunDTO($run->id),
+        );
+
+        app(ExecutionLogWriterServiceContract::class)->flush();
+
+        $logs = app(ExecutionLogRepositoryContract::class)->forRun($run->id);
+
+        expect($logs)->not->toBeEmpty()
+            ->and($logs->first()?->workflow_run_id)->toBe($run->id)
+            ->and($logs->first()?->tenant_id)->toBe($run->tenant_id)
+            ->and($logs->pluck('message')->contains('Workflow run started'))->toBeTrue()
+            ->and($logs->pluck('message')->contains('Workflow run completed successfully'))->toBeTrue();
     });
 });

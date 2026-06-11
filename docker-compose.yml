@@ -1,0 +1,81 @@
+name: flowforge
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-flowforge}
+      POSTGRES_USER: ${DB_USERNAME:-flowforge}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-flowforge}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-flowforge} -d ${DB_DATABASE:-flowforge}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - flowforge
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'redis', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - flowforge
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      DB_HOST: postgres
+      REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - backend_storage:/var/www/html/storage
+    networks:
+      - flowforge
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+        VITE_APP_NAME: ${APP_NAME:-FlowForge}
+        VITE_DEFAULT_TENANT_ID: 00000000-0000-4000-8000-000000000001
+    restart: unless-stopped
+    ports:
+      - '${FRONTEND_PORT:-8080}:80'
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - flowforge
+
+networks:
+  flowforge:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_storage:

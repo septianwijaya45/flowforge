@@ -102,6 +102,7 @@ class WorkflowTimeoutManager implements WorkflowTimeoutManagerContract
                 WorkflowRunStepStatus::Running,
                 WorkflowRunStepStatus::Pending,
             ])
+            ->orderBy('execution_order')
             ->lockForUpdate()
             ->get();
 

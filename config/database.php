@@ -114,6 +114,48 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        /*
+        |--------------------------------------------------------------------------
+        | Execution Logs Connection
+        |--------------------------------------------------------------------------
+        |
+        | High-volume append-only workflow execution logs. Defaults to a
+        | separate database from the primary application connection.
+        |
+        */
+        'execution_logs' => [
+            'driver' => env('EXECUTION_LOG_DB_DRIVER', env('DB_CONNECTION', 'sqlite')),
+            'url' => env('EXECUTION_LOG_DB_URL'),
+            'host' => env('EXECUTION_LOG_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('EXECUTION_LOG_DB_PORT', env('DB_PORT', '3306')),
+            'database' => env('EXECUTION_LOG_DB_DATABASE', match (env('DB_CONNECTION', 'sqlite')) {
+                'sqlite' => env('DB_DATABASE') === ':memory:'
+                    ? ':memory:'
+                    : database_path('execution_logs.sqlite'),
+                'pgsql' => env('DB_DATABASE', 'laravel').'_logs',
+                default => env('DB_DATABASE', 'laravel').'_logs',
+            }),
+            'username' => env('EXECUTION_LOG_DB_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('EXECUTION_LOG_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('EXECUTION_LOG_DB_SOCKET', env('DB_SOCKET', '')),
+            'charset' => env('EXECUTION_LOG_DB_CHARSET', env('DB_CHARSET', match (env('EXECUTION_LOG_DB_DRIVER', env('DB_CONNECTION', 'sqlite'))) {
+                'pgsql' => 'utf8',
+                'mysql', 'mariadb' => 'utf8mb4',
+                default => 'utf8',
+            })),
+            'collation' => env('EXECUTION_LOG_DB_COLLATION', env('DB_COLLATION', match (env('EXECUTION_LOG_DB_DRIVER', env('DB_CONNECTION', 'sqlite'))) {
+                'mysql', 'mariadb' => 'utf8mb4_unicode_ci',
+                default => null,
+            })),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'foreign_key_constraints' => env('EXECUTION_LOG_DB_FOREIGN_KEYS', false),
+            'strict' => true,
+            'engine' => null,
+            'search_path' => 'public',
+            'sslmode' => env('EXECUTION_LOG_DB_SSLMODE', env('DB_SSLMODE', 'prefer')),
+        ],
+
     ],
 
     /*
