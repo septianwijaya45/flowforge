@@ -1,17 +1,13 @@
 import { serviceClients } from '@/core/api/http-client';
-import type { Workflow, ListWorkflowsParams } from '@/modules/workflow/types/workflow';
+import type {
+    ListWorkflowsParams,
+    Workflow,
+    WorkflowListResult,
+} from '@/modules/workflow/types/workflow';
 
 interface WorkflowListResponse {
     success: boolean;
-    data: {
-        workflows: Workflow[];
-        pagination: {
-            current_page: number;
-            per_page: number;
-            total: number;
-            last_page: number;
-        };
-    };
+    data: WorkflowListResult;
 }
 
 interface WorkflowMutationResponse {
