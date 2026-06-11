@@ -10,4 +10,7 @@ enum WorkflowNodeType: string
     case Delay = 'delay';
     case Condition = 'condition';
     case Script = 'script';
+    case Email = 'email';
+    case Database = 'database';
+    case Webhook = 'webhook';
 }

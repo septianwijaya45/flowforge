@@ -17,9 +17,13 @@ use Modules\WorkflowEngine\Contracts\WorkflowStepExecutorFactoryContract;
 use Modules\WorkflowEngine\Contracts\WorkflowTimeoutManagerContract;
 use Modules\WorkflowEngine\Contracts\WorkflowTopologicalSorterContract;
 use Modules\WorkflowEngine\Services\Executors\ConditionalNodeExecutor;
+use Modules\WorkflowEngine\Services\Executors\DatabaseNodeExecutor;
 use Modules\WorkflowEngine\Services\Executors\DelayNodeExecutor;
+use Modules\WorkflowEngine\Services\Executors\EmailNodeExecutor;
 use Modules\WorkflowEngine\Services\Executors\HttpNodeExecutor;
 use Modules\WorkflowEngine\Services\Executors\ScriptNodeExecutor;
+use Modules\WorkflowEngine\Services\Executors\WebhookNodeExecutor;
+use Modules\WorkflowEngine\Services\Support\WorkflowContextInterpolator;
 use Modules\WorkflowEngine\Services\Support\SecondsDelaySleeper;
 use Modules\WorkflowEngine\Services\SyncWorkflowParallelExecutor;
 use Modules\WorkflowEngine\Services\NullWorkflowExecutionLogger;
@@ -75,6 +79,8 @@ class WorkflowEngineServiceProvider extends ModuleServiceProvider
             SecondsDelaySleeper::class,
         );
 
+        $this->app->singleton(WorkflowContextInterpolator::class);
+
         $this->app->singleton(
             WorkflowStepExecutorFactoryContract::class,
             static fn ($app): WorkflowStepExecutorFactory => new WorkflowStepExecutorFactory(
@@ -82,6 +88,9 @@ class WorkflowEngineServiceProvider extends ModuleServiceProvider
                 $app->make(DelayNodeExecutor::class),
                 $app->make(ConditionalNodeExecutor::class),
                 $app->make(ScriptNodeExecutor::class),
+                $app->make(EmailNodeExecutor::class),
+                $app->make(DatabaseNodeExecutor::class),
+                $app->make(WebhookNodeExecutor::class),
             ),
         );
 

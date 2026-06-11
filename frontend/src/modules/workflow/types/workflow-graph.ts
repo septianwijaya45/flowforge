@@ -1,4 +1,11 @@
-export type WorkflowNodeType = 'http' | 'delay' | 'condition' | 'script';
+export type WorkflowNodeType =
+    | 'http'
+    | 'delay'
+    | 'condition'
+    | 'script'
+    | 'email'
+    | 'database'
+    | 'webhook';
 
 export interface WorkflowNodePosition {
     x: number;

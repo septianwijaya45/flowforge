@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -122,6 +123,108 @@ export function NodeConfigPanel({ node, onUpdate }: NodeConfigPanelProps) {
                         </SelectContent>
                     </Select>
                 </div>
+            ) : null}
+
+            {node.data.nodeType === 'email' ? (
+                <>
+                    <div className="grid gap-2">
+                        <Label htmlFor="email-to">To</Label>
+                        <Input
+                            id="email-to"
+                            value={String(config.to ?? '')}
+                            onChange={(event) => updateConfig('to', event.target.value)}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="email-subject">Subject</Label>
+                        <Input
+                            id="email-subject"
+                            value={String(config.subject ?? '')}
+                            onChange={(event) => updateConfig('subject', event.target.value)}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="email-body">Body</Label>
+                        <textarea
+                            id="email-body"
+                            rows={4}
+                            value={String(config.body ?? '')}
+                            onChange={(event) => updateConfig('body', event.target.value)}
+                            className={cn(
+                                'border-input placeholder:text-muted-foreground flex min-h-[80px] w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none',
+                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                            )}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Use {'{{node_id.field}}'} to insert values from prior steps.
+                        </p>
+                    </div>
+                </>
+            ) : null}
+
+            {node.data.nodeType === 'database' ? (
+                <>
+                    <div className="grid gap-2">
+                        <Label htmlFor="db-query">Query</Label>
+                        <textarea
+                            id="db-query"
+                            rows={4}
+                            value={String(config.query ?? '')}
+                            onChange={(event) => updateConfig('query', event.target.value)}
+                            className={cn(
+                                'border-input placeholder:text-muted-foreground flex min-h-[80px] w-full rounded-md border bg-transparent px-3 py-2 font-mono text-sm shadow-xs outline-none',
+                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                            )}
+                        />
+                        <p className="text-xs text-muted-foreground">Read-only SELECT queries only.</p>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="db-connection">Connection (optional)</Label>
+                        <Input
+                            id="db-connection"
+                            placeholder="default"
+                            value={String(config.connection ?? '')}
+                            onChange={(event) => updateConfig('connection', event.target.value || null)}
+                        />
+                    </div>
+                </>
+            ) : null}
+
+            {node.data.nodeType === 'webhook' ? (
+                <>
+                    <div className="grid gap-2">
+                        <Label htmlFor="webhook-url">URL</Label>
+                        <Input
+                            id="webhook-url"
+                            value={String(config.url ?? '')}
+                            onChange={(event) => updateConfig('url', event.target.value)}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="webhook-payload-path">Payload path (optional)</Label>
+                        <Input
+                            id="webhook-payload-path"
+                            placeholder="previous_node.body"
+                            value={String(config.payload_path ?? '')}
+                            onChange={(event) =>
+                                updateConfig('payload_path', event.target.value || null)
+                            }
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Leave empty to send the full execution context.
+                        </p>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="webhook-timeout">Timeout (seconds)</Label>
+                        <Input
+                            id="webhook-timeout"
+                            type="number"
+                            min={1}
+                            value={Number(config.timeout ?? 30)}
+                            onChange={(event) => updateConfig('timeout', Number(event.target.value))}
+                        />
+                    </div>
+                </>
             ) : null}
 
             <p className="text-xs text-muted-foreground">ID: {node.id}</p>

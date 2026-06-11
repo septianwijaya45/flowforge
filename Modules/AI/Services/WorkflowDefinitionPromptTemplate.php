@@ -20,7 +20,7 @@ JSON schema:
   "nodes": [
     {
       "id": "string",
-      "type": "http" | "delay" | "condition" | "script",
+      "type": "http" | "delay" | "condition" | "script" | "email" | "database" | "webhook",
       "config": { }
     }
   ],
@@ -43,6 +43,9 @@ Node types:
 - delay: pause execution. config keys: label, seconds (integer).
 - condition: branch on a predicate. config keys: label, operator (equals|not_equals|greater_than|less_than|contains|truthy|falsy), path, value.
 - script: lightweight no-op or placeholder step. config keys: label.
+- email: send an email notification. config keys: label, to, subject, body (supports {{node_id.field}} placeholders).
+- database: read-only SELECT query. config keys: label, query, bindings (array, optional), connection (optional).
+- webhook: POST JSON to an external URL. config keys: label, url, payload_path (optional context path), headers (object, optional), timeout (seconds).
 
 DAG rules:
 - entry_node_id must reference an existing node with zero incoming edges and be the only root.
@@ -62,7 +65,7 @@ Scheduling:
 - Use standard 5-field cron syntax (minute hour day month weekday). Example hourly: "0 * * * *".
 
 Email or notifications:
-- Model as an http POST to a notification endpoint when no dedicated email node exists.
+- Prefer the email node for email delivery. Use webhook for Slack/Discord-style integrations.
 
 Use sensible placeholder URLs and labels when the user omits details.
 PROMPT;

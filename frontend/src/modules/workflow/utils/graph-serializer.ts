@@ -169,6 +169,9 @@ function nodeTypeLabel(type: WorkflowNodeType): string {
         delay: 'Delay',
         condition: 'Condition',
         script: 'Script',
+        email: 'Send Email',
+        database: 'Database Query',
+        webhook: 'Webhook',
     };
 
     return labels[type];
