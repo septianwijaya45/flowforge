@@ -1,9 +1,9 @@
 <?php
 
 use App\Providers\AppServiceProvider;
-use App\Providers\FortifyServiceProvider;
+use App\Support\Modules\ModuleRegistry;
 
 return [
     AppServiceProvider::class,
-    FortifyServiceProvider::class,
+    ...ModuleRegistry::providers(),
 ];
