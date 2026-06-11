@@ -10,6 +10,7 @@ use Modules\WorkflowEngine\Contracts\WorkflowExecutionEngineContract;
 use Modules\WorkflowEngine\Contracts\WorkflowExecutionStatePersisterContract;
 use Modules\WorkflowEngine\Contracts\WorkflowGraphValidatorContract;
 use Modules\WorkflowEngine\Contracts\WorkflowParallelExecutorContract;
+use Modules\WorkflowEngine\Contracts\WorkflowRunBroadcastContract;
 use Modules\WorkflowEngine\Contracts\WorkflowStepExecutorFactoryContract;
 use Modules\WorkflowEngine\Contracts\WorkflowTimeoutManagerContract;
 use Modules\WorkflowEngine\Contracts\WorkflowTopologicalSorterContract;
@@ -19,6 +20,7 @@ use Modules\WorkflowEngine\Services\Executors\HttpNodeExecutor;
 use Modules\WorkflowEngine\Services\Executors\ScriptNodeExecutor;
 use Modules\WorkflowEngine\Services\Support\SecondsDelaySleeper;
 use Modules\WorkflowEngine\Services\SyncWorkflowParallelExecutor;
+use Modules\WorkflowEngine\Services\NullWorkflowRunBroadcaster;
 use Modules\WorkflowEngine\Services\WorkflowExecutionEngine;
 use Modules\WorkflowEngine\Services\WorkflowExecutionStatePersister;
 use Modules\WorkflowEngine\Services\WorkflowGraphValidator;
@@ -48,6 +50,11 @@ class WorkflowEngineServiceProvider extends ModuleServiceProvider
         $this->app->singleton(
             WorkflowParallelExecutorContract::class,
             SyncWorkflowParallelExecutor::class,
+        );
+
+        $this->app->singleton(
+            WorkflowRunBroadcastContract::class,
+            NullWorkflowRunBroadcaster::class,
         );
 
         $this->app->singleton(

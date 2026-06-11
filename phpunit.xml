@@ -19,6 +19,7 @@
             <directory>Modules/Workflow/Tests</directory>
             <directory>Modules/WorkflowVersioning/Tests</directory>
             <directory>Modules/Trigger/Tests</directory>
+            <directory>Modules/Monitoring/Tests</directory>
         </testsuite>
     </testsuites>
     <source>

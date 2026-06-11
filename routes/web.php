@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Modules\Workflow\Models\Workflow;
+use Modules\WorkflowEngine\Models\WorkflowRun;
 
 Route::inertia('/', 'welcome')->name('home');
 
@@ -19,6 +20,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('workflows.builder');
     Route::inertia('monitoring', 'monitoring/index')->name('monitoring.index');
+    Route::get('monitoring/runs/{run}', function (WorkflowRun $run) {
+        return Inertia::render('monitoring/runs/show', [
+            'runId' => $run->id,
+        ]);
+    })->name('monitoring.runs.show');
     Route::inertia('schedules', 'schedules/index')->name('schedules.index');
     Route::inertia('ai/assistant', 'ai/assistant')->name('ai.assistant');
 });

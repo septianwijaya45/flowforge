@@ -1,16 +1,26 @@
 import { useQuery } from '@tanstack/react-query';
+import type { UseQueryOptions } from '@tanstack/react-query';
 
 import { runsApi } from '@/modules/monitoring/api/runs-api';
 import { monitoringKeys } from '@/modules/monitoring/query-keys';
+import type { ListWorkflowRunsParams, WorkflowRunListResult } from '@/modules/monitoring/types/run';
 
-export function useWorkflowRuns() {
+type UseWorkflowRunsOptions = Omit<
+    UseQueryOptions<WorkflowRunListResult, Error>,
+    'queryKey' | 'queryFn'
+>;
+
+export function useWorkflowRuns(
+    params: ListWorkflowRunsParams = {},
+    options?: UseWorkflowRunsOptions,
+) {
     return useQuery({
-        queryKey: monitoringKeys.lists(),
+        queryKey: monitoringKeys.list(params),
         queryFn: async () => {
-            const { data } = await runsApi.list();
+            const { data } = await runsApi.list(params);
 
-            return data.runs;
+            return data.data;
         },
-        enabled: false,
+        ...options,
     });
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/app/providers/auth-provider';
+import { appRoutes } from '@/core/constants/routes';
 import { useDebounce } from '@/core/hooks/use-debounce';
 import { WorkflowList } from '@/modules/workflow/components/workflow-list';
 import { WorkflowListPagination } from '@/modules/workflow/components/workflow-list-pagination';
@@ -47,6 +48,12 @@ export function WorkflowsPage() {
             onSuccess: (run) => {
                 toast.success(`Workflow "${workflow.name}" started`, {
                     description: `Run ${run.id} is ${run.status}.`,
+                    action: {
+                        label: 'Monitor',
+                        onClick: () => {
+                            window.location.href = appRoutes.monitoring.runDetail(run.id);
+                        },
+                    },
                 });
             },
             onError: (runError) => {

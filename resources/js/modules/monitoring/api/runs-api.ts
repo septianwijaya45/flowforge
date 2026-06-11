@@ -1,13 +1,25 @@
 import { serviceClients } from '@/core/api/http-client';
-import type { WorkflowRun } from '@/modules/monitoring/types/run';
+import type {
+    ListWorkflowRunsParams,
+    WorkflowRun,
+    WorkflowRunListResult,
+} from '@/modules/monitoring/types/run';
 
 interface RunsListResponse {
-    runs: WorkflowRun[];
+    success: boolean;
+    data: WorkflowRunListResult;
+}
+
+interface RunDetailResponse {
+    success: boolean;
+    data: {
+        run: WorkflowRun;
+    };
 }
 
 export const runsApi = {
-    list: () => serviceClients.monitoring.get<RunsListResponse>('/monitoring/runs'),
+    list: (params?: ListWorkflowRunsParams) =>
+        serviceClients.monitoring.get<RunsListResponse>('/monitoring/runs', { params }),
 
-    get: (id: string) =>
-        serviceClients.monitoring.get<{ run: WorkflowRun }>(`/monitoring/runs/${id}`),
+    get: (id: string) => serviceClients.monitoring.get<RunDetailResponse>(`/monitoring/runs/${id}`),
 };
