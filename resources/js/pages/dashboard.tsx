@@ -1,13 +1,13 @@
 import { Head } from '@inertiajs/react';
 
-import { DashboardOverview } from '@/modules/monitoring/components/dashboard-overview';
+import { DashboardHomePage } from '@/modules/monitoring/pages/dashboard-home-page';
 import { dashboard } from '@/routes';
 
 export default function Dashboard() {
     return (
         <>
             <Head title="Dashboard" />
-            <DashboardOverview />
+            <DashboardHomePage />
         </>
     );
 }

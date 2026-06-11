@@ -4,7 +4,9 @@ export { ExecutionTrendChart } from '@/modules/monitoring/components/execution-t
 export { MetricsSummaryCards } from '@/modules/monitoring/components/metrics-summary-cards';
 export { RunOutcomesChart } from '@/modules/monitoring/components/run-outcomes-chart';
 export { ActiveRunsList } from '@/modules/monitoring/components/active-runs-list';
-export { DashboardOverview } from '@/modules/monitoring/components/dashboard-overview';
+export { DashboardHomePage } from '@/modules/monitoring/pages/dashboard-home-page';
+export { QuickLinksGrid } from '@/modules/monitoring/components/quick-links-grid';
+export { RunsHistoryTable } from '@/modules/monitoring/components/runs-history-table';
 export { RunStatusBadge } from '@/modules/monitoring/components/run-status-badge';
 export { RunStepTimeline } from '@/modules/monitoring/components/run-step-timeline';
 export { useMonitoringMetrics } from '@/modules/monitoring/hooks/use-monitoring-metrics';

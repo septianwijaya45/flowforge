@@ -1,26 +1,19 @@
+import { Link } from '@inertiajs/react';
+
 import { useAuth } from '@/app/providers/auth-provider';
+import { appRoutes } from '@/core/constants/routes';
 import { ActiveRunsList } from '@/modules/monitoring/components/active-runs-list';
-import { ExecutionTrendChart } from '@/modules/monitoring/components/execution-trend-chart';
 import { MetricsSummaryCards } from '@/modules/monitoring/components/metrics-summary-cards';
-import { RunOutcomesChart } from '@/modules/monitoring/components/run-outcomes-chart';
+import { QuickLinksGrid } from '@/modules/monitoring/components/quick-links-grid';
 import { useMonitoringMetrics } from '@/modules/monitoring/hooks/use-monitoring-metrics';
-import { useTenantRunsRealtime } from '@/modules/monitoring/hooks/use-run-realtime';
 import { useWorkflowRuns } from '@/modules/monitoring/hooks/use-workflow-runs';
 import { PageHeader } from '@/shared/components/page-header';
 
-const METRICS_DAYS = 30;
+const METRICS_DAYS = 7;
+const RECENT_RUNS_LIMIT = 5;
 
-interface DashboardOverviewProps {
-    title?: string;
-    description?: string;
-}
-
-export function DashboardOverview({
-    title = 'Dashboard',
-    description = 'Workflow health overview with active runs, success rate, failure rate, and average execution time.',
-}: DashboardOverviewProps) {
+export function DashboardHomePage() {
     const { apiAuthReady } = useAuth();
-    useTenantRunsRealtime();
 
     const {
         data: metrics,
@@ -30,11 +23,11 @@ export function DashboardOverview({
     } = useMonitoringMetrics(METRICS_DAYS, { enabled: apiAuthReady });
 
     const {
-        data: activeRunsData,
+        data: recentRunsData,
         isLoading: runsLoading,
         isError: runsError,
         error: runsErrorMessage,
-    } = useWorkflowRuns({ active_only: true, per_page: 20 }, { enabled: apiAuthReady });
+    } = useWorkflowRuns({ per_page: RECENT_RUNS_LIMIT }, { enabled: apiAuthReady });
 
     const errorMessage = metricsError
         ? metricsErrorMessage.message
@@ -44,7 +37,10 @@ export function DashboardOverview({
 
     return (
         <div className="flex flex-col gap-6 p-4 md:p-6">
-            <PageHeader title={title} description={description} />
+            <PageHeader
+                title="Dashboard"
+                description="High-level overview of your tenant. Jump into workflows or open monitoring for deeper execution insights."
+            />
 
             {errorMessage ? (
                 <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-100">
@@ -54,16 +50,21 @@ export function DashboardOverview({
 
             <MetricsSummaryCards metrics={metrics} isLoading={metricsLoading} />
 
-            <div className="grid gap-4 lg:grid-cols-2">
-                <RunOutcomesChart metrics={metrics} isLoading={metricsLoading} />
-                <ExecutionTrendChart metrics={metrics} isLoading={metricsLoading} />
-            </div>
+            <QuickLinksGrid />
 
             <section className="space-y-3">
-                <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-                    Active runs
-                </h2>
-                <ActiveRunsList runs={activeRunsData?.runs ?? []} isLoading={runsLoading} />
+                <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+                        Recent runs
+                    </h2>
+                    <Link
+                        href={appRoutes.monitoring.dashboard}
+                        className="text-sm text-primary hover:underline"
+                    >
+                        View all in Monitoring
+                    </Link>
+                </div>
+                <ActiveRunsList runs={recentRunsData?.runs ?? []} isLoading={runsLoading} />
             </section>
         </div>
     );
