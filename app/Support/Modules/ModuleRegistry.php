@@ -10,6 +10,7 @@ use Modules\Monitoring\MonitoringServiceProvider;
 use Modules\Retry\RetryServiceProvider;
 use Modules\Scheduler\SchedulerServiceProvider;
 use Modules\Tenant\TenantServiceProvider;
+use Modules\Trigger\TriggerServiceProvider;
 use Modules\Workflow\WorkflowServiceProvider;
 use Modules\WorkflowEngine\WorkflowEngineServiceProvider;
 use Modules\WorkflowVersioning\WorkflowVersioningServiceProvider;
@@ -33,6 +34,7 @@ class ModuleRegistry
             WorkflowServiceProvider::class,
             WorkflowEngineServiceProvider::class,
             WorkflowVersioningServiceProvider::class,
+            TriggerServiceProvider::class,
             RetryServiceProvider::class,
             MonitoringServiceProvider::class,
             SchedulerServiceProvider::class,

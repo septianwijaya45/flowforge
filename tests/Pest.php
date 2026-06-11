@@ -22,3 +22,6 @@ pest()->extend(TestCase::class)
 
 pest()->extend(TestCase::class)
     ->in('../Modules/WorkflowVersioning/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/Trigger/Tests');
