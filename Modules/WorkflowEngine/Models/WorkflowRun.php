@@ -129,7 +129,7 @@ class WorkflowRun extends Model
     public function scopeTerminal(Builder $query): Builder
     {
         return $query->whereIn('status', [
-            WorkflowRunStatus::Completed,
+            WorkflowRunStatus::Success,
             WorkflowRunStatus::Failed,
             WorkflowRunStatus::Cancelled,
             WorkflowRunStatus::TimedOut,

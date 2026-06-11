@@ -7,10 +7,8 @@ namespace Modules\WorkflowEngine\Enums;
 enum WorkflowRunStepStatus: string
 {
     case Pending = 'pending';
-    case Queued = 'queued';
     case Running = 'running';
-    case Completed = 'completed';
+    case Success = 'success';
     case Failed = 'failed';
-    case Skipped = 'skipped';
     case Cancelled = 'cancelled';
 }

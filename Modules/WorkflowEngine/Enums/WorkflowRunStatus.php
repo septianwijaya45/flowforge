@@ -8,7 +8,7 @@ enum WorkflowRunStatus: string
 {
     case Pending = 'pending';
     case Running = 'running';
-    case Completed = 'completed';
+    case Success = 'success';
     case Failed = 'failed';
     case Cancelled = 'cancelled';
     case TimedOut = 'timed_out';
