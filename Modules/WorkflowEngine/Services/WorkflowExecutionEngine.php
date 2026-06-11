@@ -9,6 +9,7 @@ use Modules\WorkflowEngine\Contracts\WorkflowExecutionEngineContract;
 use Modules\WorkflowEngine\Contracts\WorkflowExecutionStatePersisterContract;
 use Modules\WorkflowEngine\Contracts\WorkflowGraphValidatorContract;
 use Modules\WorkflowEngine\Contracts\WorkflowParallelExecutorContract;
+use Modules\WorkflowEngine\Contracts\WorkflowStepExecutorFactoryContract;
 use Modules\WorkflowEngine\Contracts\WorkflowTopologicalSorterContract;
 use Modules\WorkflowEngine\DTOs\ExecuteWorkflowNodeDTO;
 use Modules\WorkflowEngine\DTOs\ExecuteWorkflowRunDTO;
@@ -32,7 +33,7 @@ class WorkflowExecutionEngine implements WorkflowExecutionEngineContract
         private readonly WorkflowGraphValidatorContract $graphValidator,
         private readonly WorkflowTopologicalSorterContract $topologicalSorter,
         private readonly WorkflowParallelExecutorContract $parallelExecutor,
-        private readonly WorkflowNodeExecutorRegistry $executorRegistry,
+        private readonly WorkflowStepExecutorFactoryContract $executorFactory,
         private readonly WorkflowExecutionStatePersisterContract $statePersister,
     ) {}
 
@@ -143,7 +144,7 @@ class WorkflowExecutionEngine implements WorkflowExecutionEngineContract
         $startedAt = microtime(true);
 
         try {
-            $executor = $this->executorRegistry->resolve($node->type);
+            $executor = $this->executorFactory->make($node->type);
             $result = $executor->execute(new ExecuteWorkflowNodeDTO(
                 run: $run,
                 step: $step,

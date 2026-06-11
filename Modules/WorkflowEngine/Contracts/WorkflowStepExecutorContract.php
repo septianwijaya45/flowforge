@@ -8,9 +8,12 @@ use Modules\WorkflowEngine\DTOs\ExecuteWorkflowNodeDTO;
 use Modules\WorkflowEngine\DTOs\WorkflowStepExecutionResultDTO;
 use Modules\WorkflowEngine\Enums\WorkflowNodeType;
 
-interface WorkflowNodeExecutorContract
+/**
+ * Strategy contract for executing an individual workflow step node.
+ */
+interface WorkflowStepExecutorContract
 {
-    public function supports(WorkflowNodeType $type): bool;
+    public function type(): WorkflowNodeType;
 
     public function execute(ExecuteWorkflowNodeDTO $command): WorkflowStepExecutionResultDTO;
 }

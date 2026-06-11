@@ -8,11 +8,9 @@ use Modules\Workflow\Enums\WorkflowStatus;
 use Modules\Workflow\Models\Workflow;
 use Modules\Workflow\Models\WorkflowVersion;
 use Modules\WorkflowEngine\Contracts\WorkflowExecutionEngineContract;
-use Modules\WorkflowEngine\Contracts\WorkflowExecutionStatePersisterContract;
-use Modules\WorkflowEngine\Contracts\WorkflowGraphValidatorContract;
-use Modules\WorkflowEngine\Contracts\WorkflowNodeExecutorContract;
 use Modules\WorkflowEngine\Contracts\WorkflowParallelExecutorContract;
-use Modules\WorkflowEngine\Contracts\WorkflowTopologicalSorterContract;
+use Modules\WorkflowEngine\Contracts\WorkflowStepExecutorContract;
+use Modules\WorkflowEngine\Contracts\WorkflowStepExecutorFactoryContract;
 use Modules\WorkflowEngine\DTOs\ExecuteWorkflowNodeDTO;
 use Modules\WorkflowEngine\DTOs\ExecuteWorkflowRunDTO;
 use Modules\WorkflowEngine\DTOs\WorkflowStepExecutionResultDTO;
@@ -22,9 +20,11 @@ use Modules\WorkflowEngine\Enums\WorkflowRunStepStatus;
 use Modules\WorkflowEngine\Enums\WorkflowTriggerType;
 use Modules\WorkflowEngine\Exceptions\WorkflowRunCancelledException;
 use Modules\WorkflowEngine\Models\WorkflowRun;
+use Modules\WorkflowEngine\Services\Executors\ConditionalNodeExecutor;
+use Modules\WorkflowEngine\Services\Executors\DelayNodeExecutor;
 use Modules\WorkflowEngine\Services\Executors\ScriptNodeExecutor;
 use Modules\WorkflowEngine\Services\WorkflowExecutionEngine;
-use Modules\WorkflowEngine\Services\WorkflowNodeExecutorRegistry;
+use Modules\WorkflowEngine\Services\WorkflowStepExecutorFactory;
 
 uses(RefreshDatabase::class);
 
@@ -153,29 +153,25 @@ describe('WorkflowExecutionEngine', function (): void {
         ]);
 
         app()->forgetInstance(WorkflowExecutionEngineContract::class);
-        app()->instance(WorkflowExecutionEngineContract::class, new WorkflowExecutionEngine(
-            app(WorkflowGraphValidatorContract::class),
-            app(WorkflowTopologicalSorterContract::class),
-            app(WorkflowParallelExecutorContract::class),
-            new WorkflowNodeExecutorRegistry([
-                new class implements WorkflowNodeExecutorContract
+        app()->instance(WorkflowStepExecutorFactoryContract::class, new WorkflowStepExecutorFactory(
+            new class implements WorkflowStepExecutorContract
+            {
+                public function type(): WorkflowNodeType
                 {
-                    public function supports(WorkflowNodeType $type): bool
-                    {
-                        return $type === WorkflowNodeType::Http;
-                    }
+                    return WorkflowNodeType::Http;
+                }
 
-                    public function execute(ExecuteWorkflowNodeDTO $command): WorkflowStepExecutionResultDTO
-                    {
-                        return WorkflowStepExecutionResultDTO::failed(
-                            $command->node->id,
-                            ['message' => 'Simulated HTTP failure'],
-                        );
-                    }
-                },
-                app(ScriptNodeExecutor::class),
-            ]),
-            app(WorkflowExecutionStatePersisterContract::class),
+                public function execute(ExecuteWorkflowNodeDTO $command): WorkflowStepExecutionResultDTO
+                {
+                    return WorkflowStepExecutionResultDTO::failed(
+                        $command->node->id,
+                        ['message' => 'Simulated HTTP failure'],
+                    );
+                }
+            },
+            app(DelayNodeExecutor::class),
+            app(ConditionalNodeExecutor::class),
+            app(ScriptNodeExecutor::class),
         ));
 
         $result = app(WorkflowExecutionEngineContract::class)->execute(new ExecuteWorkflowRunDTO($run->id));
