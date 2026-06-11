@@ -11,6 +11,7 @@ use Modules\WorkflowEngine\Contracts\WorkflowExecutionStatePersisterContract;
 use Modules\WorkflowEngine\Contracts\WorkflowGraphValidatorContract;
 use Modules\WorkflowEngine\Contracts\WorkflowParallelExecutorContract;
 use Modules\WorkflowEngine\Contracts\WorkflowStepExecutorFactoryContract;
+use Modules\WorkflowEngine\Contracts\WorkflowTimeoutManagerContract;
 use Modules\WorkflowEngine\Contracts\WorkflowTopologicalSorterContract;
 use Modules\WorkflowEngine\Services\Executors\ConditionalNodeExecutor;
 use Modules\WorkflowEngine\Services\Executors\DelayNodeExecutor;
@@ -22,6 +23,7 @@ use Modules\WorkflowEngine\Services\WorkflowExecutionEngine;
 use Modules\WorkflowEngine\Services\WorkflowExecutionStatePersister;
 use Modules\WorkflowEngine\Services\WorkflowGraphValidator;
 use Modules\WorkflowEngine\Services\WorkflowStepExecutorFactory;
+use Modules\WorkflowEngine\Services\WorkflowTimeoutManager;
 use Modules\WorkflowEngine\Services\WorkflowTopologicalSorter;
 
 class WorkflowEngineServiceProvider extends ModuleServiceProvider
@@ -71,6 +73,11 @@ class WorkflowEngineServiceProvider extends ModuleServiceProvider
         $this->app->singleton(
             WorkflowExecutionEngineContract::class,
             WorkflowExecutionEngine::class,
+        );
+
+        $this->app->singleton(
+            WorkflowTimeoutManagerContract::class,
+            WorkflowTimeoutManager::class,
         );
     }
 }
