@@ -41,6 +41,27 @@ describe('ExponentialBackoffStrategy', function (): void {
     it('identifies itself as exponential_backoff', function (): void {
         expect((new ExponentialBackoffStrategy)->identifier())->toBe('exponential_backoff');
     });
+
+    it('returns zero delay for the first attempt', function (): void {
+        expect((new ExponentialBackoffStrategy)->delaySeconds(1))->toBe(0);
+    });
+
+    it('rejects negative base delay values', function (): void {
+        expect(fn () => new ExponentialBackoffStrategy(baseDelaySeconds: -1))
+            ->toThrow(InvalidArgumentException::class);
+    });
+
+    it('rejects multipliers below one', function (): void {
+        expect(fn () => new ExponentialBackoffStrategy(multiplier: 0.5))
+            ->toThrow(InvalidArgumentException::class);
+    });
+
+    it('rejects max delay below base delay', function (): void {
+        expect(fn () => new ExponentialBackoffStrategy(
+            baseDelaySeconds: 10,
+            maxDelaySeconds: 5,
+        ))->toThrow(InvalidArgumentException::class);
+    });
 });
 
 describe('RetryStrategy configuration', function (): void {

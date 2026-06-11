@@ -102,6 +102,48 @@ describe('WorkflowTopologicalSorter', function (): void {
         ]);
     });
 
+    it('returns staggered layers for branches with different depths', function (): void {
+        $layers = workflowTopologicalSorter()->sort(sorterGraphFromDefinition([
+            'entry_node_id' => 'root',
+            'nodes' => [
+                ['id' => 'root', 'type' => 'http', 'config' => []],
+                ['id' => 'short', 'type' => 'delay', 'config' => []],
+                ['id' => 'long_a', 'type' => 'condition', 'config' => []],
+                ['id' => 'long_b', 'type' => 'script', 'config' => []],
+                ['id' => 'sink', 'type' => 'http', 'config' => []],
+            ],
+            'edges' => [
+                ['id' => 'e1', 'source' => 'root', 'target' => 'short'],
+                ['id' => 'e2', 'source' => 'root', 'target' => 'long_a'],
+                ['id' => 'e3', 'source' => 'long_a', 'target' => 'long_b'],
+                ['id' => 'e4', 'source' => 'short', 'target' => 'sink'],
+                ['id' => 'e5', 'source' => 'long_b', 'target' => 'sink'],
+            ],
+        ]));
+
+        expect($layers)->toBe([
+            ['root'],
+            ['long_a', 'short'],
+            ['long_b'],
+            ['sink'],
+        ]);
+    });
+
+    it('handles multiple independent roots in topological order', function (): void {
+        $layers = workflowTopologicalSorter()->sort(sorterGraphFromDefinition([
+            'entry_node_id' => 'a',
+            'nodes' => [
+                ['id' => 'a', 'type' => 'http', 'config' => []],
+                ['id' => 'b', 'type' => 'delay', 'config' => []],
+                ['id' => 'c', 'type' => 'condition', 'config' => []],
+            ],
+            'edges' => [],
+        ]));
+
+        expect($layers)->toHaveCount(1)
+            ->and($layers[0])->toBe(['a', 'b', 'c']);
+    });
+
     it('throws when the graph contains a cycle', function (): void {
         expect(fn () => workflowTopologicalSorter()->sort(sorterGraphFromDefinition([
             'entry_node_id' => 'start',
