@@ -7,6 +7,7 @@ namespace App\Support\Modules;
 use Modules\AI\AIServiceProvider;
 use Modules\Auth\AuthServiceProvider;
 use Modules\Monitoring\MonitoringServiceProvider;
+use Modules\Retry\RetryServiceProvider;
 use Modules\Scheduler\SchedulerServiceProvider;
 use Modules\Tenant\TenantServiceProvider;
 use Modules\Workflow\WorkflowServiceProvider;
@@ -30,6 +31,7 @@ class ModuleRegistry
             TenantServiceProvider::class,
             WorkflowServiceProvider::class,
             WorkflowEngineServiceProvider::class,
+            RetryServiceProvider::class,
             MonitoringServiceProvider::class,
             SchedulerServiceProvider::class,
             AIServiceProvider::class,

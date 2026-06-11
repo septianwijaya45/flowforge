@@ -13,6 +13,7 @@
         </testsuite>
         <testsuite name="Modules">
             <directory>Modules/WorkflowEngine/Tests</directory>
+            <directory>Modules/Retry/Tests</directory>
         </testsuite>
     </testsuites>
     <source>

@@ -7,3 +7,6 @@ pest()->extend(TestCase::class)
 
 pest()->extend(TestCase::class)
     ->in('../Modules/WorkflowEngine/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/Retry/Tests');
