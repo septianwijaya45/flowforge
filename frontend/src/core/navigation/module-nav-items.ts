@@ -25,8 +25,8 @@ export const moduleNavItems: NavItem[] = [
         icon: Calendar,
     },
     {
-        title: 'AI Assistant',
-        href: appRoutes.ai.assistant,
+        title: 'AI Generator',
+        href: appRoutes.ai.generator,
         icon: Bot,
     },
 ];

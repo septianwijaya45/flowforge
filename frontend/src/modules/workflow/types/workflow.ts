@@ -8,7 +8,7 @@ export interface Workflow {
     slug: string;
     description: string | null;
     status: WorkflowStatus;
-    current_version_id: number | null;
+    current_version_id: string | null;
     created_at: string;
     updated_at: string;
 }

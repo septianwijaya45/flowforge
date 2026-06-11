@@ -14,6 +14,7 @@ use Modules\Trigger\Models\WorkflowTrigger;
 use Modules\Workflow\Models\Workflow;
 use Modules\WorkflowEngine\Enums\WorkflowRunStatus;
 use Modules\WorkflowEngine\Enums\WorkflowTriggerType;
+use Modules\WorkflowEngine\Jobs\ExecuteWorkflowRunJob;
 use Modules\WorkflowEngine\Models\WorkflowRun;
 
 class TriggerDispatcher implements TriggerDispatcherContract
@@ -41,7 +42,7 @@ class TriggerDispatcher implements TriggerDispatcherContract
             $triggerPayload['trigger_id'] = $dto->triggerId;
         }
 
-        return WorkflowRun::query()->create([
+        $run = WorkflowRun::query()->create([
             'workflow_id' => $workflow->id,
             'workflow_version_id' => $workflow->current_version_id,
             'status' => WorkflowRunStatus::Pending,
@@ -50,6 +51,10 @@ class TriggerDispatcher implements TriggerDispatcherContract
             'input' => $dto->input,
             'triggered_by' => $dto->triggeredBy,
         ]);
+
+        ExecuteWorkflowRunJob::dispatch($run->id);
+
+        return $run;
     }
 
     public function dispatchFromTrigger(WorkflowTrigger $trigger, DispatchTriggerDTO $dto): WorkflowRun

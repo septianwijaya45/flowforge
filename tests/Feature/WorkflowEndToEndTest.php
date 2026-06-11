@@ -8,8 +8,6 @@ use Illuminate\Support\Facades\Schema;
 use Modules\ExecutionLog\Contracts\ExecutionLogRepositoryContract;
 use Modules\ExecutionLog\Contracts\ExecutionLogWriterServiceContract;
 use Modules\Tenant\Models\Tenant;
-use Modules\WorkflowEngine\Contracts\WorkflowExecutionEngineContract;
-use Modules\WorkflowEngine\DTOs\ExecuteWorkflowRunDTO;
 use Modules\WorkflowEngine\Enums\WorkflowRunStatus;
 use Modules\WorkflowEngine\Enums\WorkflowRunStepStatus;
 use Tests\Support\ApiTestContext;
@@ -89,16 +87,9 @@ describe('Workflow end-to-end', function (): void {
         );
 
         $triggerResponse->assertCreated()
-            ->assertJsonPath('data.run.status', 'pending')
             ->assertJsonPath('data.run.trigger_type', 'manual');
 
         $runId = $triggerResponse->json('data.run.id');
-
-        $executionResult = app(WorkflowExecutionEngineContract::class)->execute(
-            new ExecuteWorkflowRunDTO($runId),
-        );
-
-        expect($executionResult->status)->toBe(WorkflowRunStatus::Success);
 
         app(ExecutionLogWriterServiceContract::class)->flush();
 

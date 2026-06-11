@@ -159,7 +159,7 @@ Modules boot in dependency order via `App\Support\Modules\ModuleRegistry`.
 | **Tenant** | Multi-tenancy, `X-Tenant-Id` context, data isolation |
 | **Workflow** | Workflow CRUD (metadata only — not the graph) |
 | **WorkflowVersioning** | Immutable version snapshots, publish, rollback (copy-forward) |
-| **WorkflowEngine** | DAG validation, topological sort, node executors (HTTP, delay, condition, script), run orchestration |
+| **WorkflowEngine** | DAG validation, topological sort, node executors (HTTP, delay, condition, script, email, database, webhook), run orchestration |
 | **Trigger** | Manual, webhook, and cron triggers; dispatches pending runs |
 | **ExecutionLog** | High-volume structured logs in a separate database connection |
 | **Retry** | Exponential backoff strategy, retry decisions, persisted retry history |
@@ -175,6 +175,9 @@ Modules boot in dependency order via `App\Support\Modules\ModuleRegistry`.
 | `delay` | Sleep for configured seconds |
 | `condition` | Branching predicate |
 | `script` | Lightweight in-process script step |
+| `email` | Send email notification |
+| `database` | Read-only SELECT query |
+| `webhook` | POST payload to external webhook URL |
 
 ---
 

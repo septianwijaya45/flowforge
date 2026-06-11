@@ -1,4 +1,4 @@
-import { Clock, Code, GitBranch, Globe } from 'lucide-react';
+import { Clock, Code, Database, GitBranch, Globe, Mail, Webhook } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import type { WorkflowNodeType } from '@/modules/workflow/types/workflow-graph';
@@ -52,6 +52,41 @@ export const nodeTypeDefinitions: NodeTypeDefinition[] = [
         icon: Code,
         defaultConfig: {
             label: 'Script',
+        },
+    },
+    {
+        type: 'email',
+        label: 'Send Email',
+        description: 'Send an email notification',
+        icon: Mail,
+        defaultConfig: {
+            label: 'Send Email',
+            to: 'user@example.com',
+            subject: 'Workflow notification',
+            body: 'Hello from FlowForge.',
+        },
+    },
+    {
+        type: 'database',
+        label: 'Database Query',
+        description: 'Run a read-only SELECT query',
+        icon: Database,
+        defaultConfig: {
+            label: 'Database Query',
+            query: 'SELECT 1 AS value',
+            bindings: [],
+        },
+    },
+    {
+        type: 'webhook',
+        label: 'Webhook',
+        description: 'POST data to an external webhook URL',
+        icon: Webhook,
+        defaultConfig: {
+            label: 'Webhook',
+            url: 'https://example.com/webhook',
+            payload_path: null,
+            timeout: 30,
         },
     },
 ];

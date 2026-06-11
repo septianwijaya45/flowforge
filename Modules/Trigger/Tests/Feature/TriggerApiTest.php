@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Queue;
+use Modules\WorkflowEngine\Jobs\ExecuteWorkflowRunJob;
 use Modules\Auth\Models\User;
 use Modules\Tenant\Models\Tenant;
 use Modules\Trigger\Enums\TriggerType;
@@ -130,6 +132,7 @@ it('rejects manual triggers when the workflow has no published version', functio
 });
 
 it('fires a manual trigger and creates a pending workflow run', function (): void {
+    Queue::fake();
     $context = triggerApiContext();
 
     $response = $this->postJson(
@@ -143,6 +146,10 @@ it('fires a manual trigger and creates a pending workflow run', function (): voi
         ->assertJsonPath('data.run.trigger_type', 'manual')
         ->assertJsonPath('data.run.input.source', 'dashboard');
 
+    Queue::assertPushed(ExecuteWorkflowRunJob::class, function (ExecuteWorkflowRunJob $job) use ($response): bool {
+        return $job->runId === $response->json('data.run.id');
+    });
+
     $this->assertDatabaseHas('workflow_runs', [
         'workflow_id' => $context['workflow']->id,
         'status' => WorkflowRunStatus::Pending->value,
@@ -151,6 +158,7 @@ it('fires a manual trigger and creates a pending workflow run', function (): voi
 });
 
 it('handles webhook triggers without authentication', function (): void {
+    Queue::fake();
     $context = triggerApiContext();
 
     $createResponse = $this->postJson(
@@ -171,6 +179,7 @@ it('handles webhook triggers without authentication', function (): void {
 });
 
 it('processes due cron triggers', function (): void {
+    Queue::fake();
     Carbon::setTestNow('2026-06-11 10:00:00');
 
     $context = triggerApiContext();

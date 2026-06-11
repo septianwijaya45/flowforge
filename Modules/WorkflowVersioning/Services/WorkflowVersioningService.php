@@ -6,6 +6,7 @@ namespace Modules\WorkflowVersioning\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Modules\Workflow\Enums\WorkflowStatus;
 use Modules\Workflow\Models\Workflow;
 use Modules\Workflow\Models\WorkflowVersion;
 use Modules\WorkflowEngine\Contracts\WorkflowGraphValidatorContract;
@@ -83,9 +84,15 @@ class WorkflowVersioningService implements WorkflowVersioningServiceContract
         $definitionHash = $this->hashDefinition($definition);
 
         return DB::transaction(function () use ($workflow, $definition, $definitionHash, $changeSummary, $createdBy): WorkflowVersion {
-            $latestVersionNumber = WorkflowVersion::query()
-                ->where('workflow_id', $workflow->id)
+            // Lock the parent workflow row so concurrent saves serialize safely.
+            // PostgreSQL rejects FOR UPDATE on aggregate queries (e.g. max()).
+            Workflow::query()
+                ->whereKey($workflow->id)
                 ->lockForUpdate()
+                ->first();
+
+            $latestVersionNumber = (int) WorkflowVersion::query()
+                ->where('workflow_id', $workflow->id)
                 ->max('version_number');
 
             $version = WorkflowVersion::query()->create([
@@ -97,7 +104,16 @@ class WorkflowVersioningService implements WorkflowVersioningServiceContract
                 'created_by' => $createdBy,
             ]);
 
-            $workflow->update(['current_version_id' => $version->id]);
+            $workflowUpdates = ['current_version_id' => $version->id];
+
+            if (
+                $workflow->current_version_id === null
+                && $workflow->status === WorkflowStatus::Draft
+            ) {
+                $workflowUpdates['status'] = WorkflowStatus::Active;
+            }
+
+            $workflow->update($workflowUpdates);
 
             return $version->refresh();
         });

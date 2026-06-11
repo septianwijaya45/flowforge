@@ -31,3 +31,6 @@ pest()->extend(TestCase::class)
 
 pest()->extend(TestCase::class)
     ->in('../Modules/ExecutionLog/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/AI/Tests');

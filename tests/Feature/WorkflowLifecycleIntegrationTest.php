@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Modules\Tenant\Models\Tenant;
 use Modules\Workflow\Models\WorkflowVersion;
 use Modules\WorkflowEngine\Enums\WorkflowRunStatus;
@@ -63,6 +64,8 @@ describe('Workflow lifecycle integration', function (): void {
             ->assertJsonPath('data.version.version_number', 1);
 
         $versionOneId = $versionOneResponse->json('data.version.id');
+
+        Queue::fake();
 
         $firstRunResponse = $this->postJson(
             "/api/v1/workflows/{$workflowId}/trigger/manual",

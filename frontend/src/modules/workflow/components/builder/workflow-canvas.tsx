@@ -44,7 +44,10 @@ interface WorkflowCanvasProps {
     initialDefinition: WorkflowDefinition;
     versionNumber?: number;
     isSaving: boolean;
+    isRunning?: boolean;
+    canRun?: boolean;
     onSave: (definition: WorkflowDefinition) => void;
+    onRun?: (definition: WorkflowDefinition, needsSave: boolean) => void;
     onValidationError: (message: string) => void;
 }
 
@@ -53,7 +56,10 @@ function WorkflowCanvasInner({
     initialDefinition,
     versionNumber,
     isSaving,
+    isRunning = false,
+    canRun = true,
     onSave,
+    onRun,
     onValidationError,
 }: WorkflowCanvasProps) {
     const { resolvedAppearance } = useAppearance();
@@ -145,9 +151,9 @@ function WorkflowCanvasInner({
         [setNodes],
     );
 
-    const handleSave = () => {
+    const serializeDefinition = (): WorkflowDefinition | null => {
         try {
-            onSave(flowToDefinition(nodes, edges));
+            return flowToDefinition(nodes, edges);
         } catch (error) {
             const message =
                 error instanceof GraphSerializationError
@@ -155,6 +161,28 @@ function WorkflowCanvasInner({
                     : 'Unable to serialize workflow graph.';
 
             onValidationError(message);
+
+            return null;
+        }
+    };
+
+    const handleSave = () => {
+        const definition = serializeDefinition();
+
+        if (definition) {
+            onSave(definition);
+        }
+    };
+
+    const handleRun = () => {
+        if (!onRun) {
+            return;
+        }
+
+        const definition = serializeDefinition();
+
+        if (definition) {
+            onRun(definition, isDirty);
         }
     };
 
@@ -165,7 +193,10 @@ function WorkflowCanvasInner({
                 versionNumber={versionNumber}
                 isDirty={isDirty}
                 isSaving={isSaving}
+                isRunning={isRunning}
+                canRun={canRun}
                 onSave={handleSave}
+                onRun={onRun ? handleRun : undefined}
             />
 
             <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
