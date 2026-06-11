@@ -32,6 +32,11 @@ class JwtAuthService implements JwtAuthServiceContract
             throw AuthenticationException::invalidCredentials();
         }
 
+        return $this->issueForUser($user);
+    }
+
+    public function issueForUser(User $user): TokenPairDTO
+    {
         return $this->issueTokenPair($user);
     }
 

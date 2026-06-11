@@ -2,10 +2,13 @@
 
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
+use Modules\Auth\Http\Controllers\AuthController;
 use Modules\Auth\Http\Controllers\Settings\ProfileController;
 use Modules\Auth\Http\Controllers\Settings\SecurityController;
 
 Route::middleware(['auth'])->group(function (): void {
+    Route::post('api/v1/auth/session-token', [AuthController::class, 'sessionToken'])
+        ->name('auth.session-token');
     Route::redirect('settings', '/settings/profile');
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
