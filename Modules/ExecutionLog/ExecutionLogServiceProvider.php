@@ -7,11 +7,15 @@ namespace Modules\ExecutionLog;
 use App\Support\Modules\ModuleServiceProvider;
 use Modules\ExecutionLog\Console\PurgeExpiredExecutionLogsCommand;
 use Modules\ExecutionLog\Contracts\ExecutionLogRepositoryContract;
+use Modules\ExecutionLog\Contracts\ExecutionLogServiceContract;
 use Modules\ExecutionLog\Contracts\ExecutionLogRetentionServiceContract;
 use Modules\ExecutionLog\Contracts\ExecutionLogWriterServiceContract;
 use Modules\ExecutionLog\Repositories\ExecutionLogRepository;
 use Modules\ExecutionLog\Services\ExecutionLogRetentionService;
+use Modules\ExecutionLog\Services\ExecutionLogService;
+use Modules\ExecutionLog\Services\ExecutionLogWorkflowLogger;
 use Modules\ExecutionLog\Services\ExecutionLogWriterService;
+use Modules\WorkflowEngine\Contracts\WorkflowExecutionLogContract;
 
 class ExecutionLogServiceProvider extends ModuleServiceProvider
 {
@@ -28,6 +32,10 @@ class ExecutionLogServiceProvider extends ModuleServiceProvider
         );
 
         $this->app->singleton(ExecutionLogRepositoryContract::class, ExecutionLogRepository::class);
+
+        $this->app->singleton(ExecutionLogServiceContract::class, ExecutionLogService::class);
+
+        $this->app->singleton(WorkflowExecutionLogContract::class, ExecutionLogWorkflowLogger::class);
 
         $this->app->singleton(ExecutionLogWriterServiceContract::class, function ($app): ExecutionLogWriterService {
             return new ExecutionLogWriterService(

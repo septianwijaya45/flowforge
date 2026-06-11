@@ -8,6 +8,7 @@ use App\Support\Modules\ModuleServiceProvider;
 use Modules\WorkflowEngine\Console\ExplainWorkflowRunQueriesCommand;
 use Modules\WorkflowEngine\Contracts\DelaySleeperContract;
 use Modules\WorkflowEngine\Contracts\WorkflowExecutionEngineContract;
+use Modules\WorkflowEngine\Contracts\WorkflowExecutionLogContract;
 use Modules\WorkflowEngine\Contracts\WorkflowExecutionStatePersisterContract;
 use Modules\WorkflowEngine\Contracts\WorkflowGraphValidatorContract;
 use Modules\WorkflowEngine\Contracts\WorkflowParallelExecutorContract;
@@ -21,6 +22,7 @@ use Modules\WorkflowEngine\Services\Executors\HttpNodeExecutor;
 use Modules\WorkflowEngine\Services\Executors\ScriptNodeExecutor;
 use Modules\WorkflowEngine\Services\Support\SecondsDelaySleeper;
 use Modules\WorkflowEngine\Services\SyncWorkflowParallelExecutor;
+use Modules\WorkflowEngine\Services\NullWorkflowExecutionLogger;
 use Modules\WorkflowEngine\Services\NullWorkflowRunBroadcaster;
 use Modules\WorkflowEngine\Services\WorkflowExecutionEngine;
 use Modules\WorkflowEngine\Services\WorkflowExecutionStatePersister;
@@ -56,6 +58,11 @@ class WorkflowEngineServiceProvider extends ModuleServiceProvider
         $this->app->singleton(
             WorkflowRunBroadcastContract::class,
             NullWorkflowRunBroadcaster::class,
+        );
+
+        $this->app->singleton(
+            WorkflowExecutionLogContract::class,
+            NullWorkflowExecutionLogger::class,
         );
 
         $this->app->singleton(
