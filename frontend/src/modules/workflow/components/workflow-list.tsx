@@ -81,7 +81,17 @@ export function WorkflowList({
                 <tbody>
                     {workflows.map((workflow) => {
                         const isRunning = runningWorkflowId === workflow.id;
-                        const canRun = workflow.status === 'active';
+                        const canRun =
+                            workflow.current_version_id !== null &&
+                            workflow.status !== 'archived' &&
+                            workflow.status !== 'disabled';
+                        const runDisabledReason = !canWrite
+                            ? 'You need editor or admin access to run workflows.'
+                            : workflow.current_version_id === null
+                              ? 'Save the workflow in the builder before running.'
+                              : workflow.status === 'archived' || workflow.status === 'disabled'
+                                ? 'Archived and disabled workflows cannot be run.'
+                                : undefined;
 
                         return (
                             <tr key={workflow.id} className="border-b last:border-b-0">
@@ -118,6 +128,7 @@ export function WorkflowList({
                                             size="sm"
                                             variant="outline"
                                             disabled={!canRun || isRunning || !canWrite}
+                                            title={runDisabledReason}
                                             onClick={() => onRun(workflow)}
                                         >
                                             <Play className="size-4" />

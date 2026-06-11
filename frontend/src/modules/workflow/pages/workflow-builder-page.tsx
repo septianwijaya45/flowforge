@@ -1,18 +1,83 @@
 import { toast } from 'sonner';
 
+import { useAuth } from '@/app/providers/auth-provider';
 import { Skeleton } from '@/components/ui/skeleton';
+import { appRoutes } from '@/core/constants/routes';
+import { canWrite } from '@/core/auth/permissions';
 import { WorkflowCanvas } from '@/modules/workflow/components/builder/workflow-canvas';
+import { useRunWorkflow } from '@/modules/workflow/hooks/use-run-workflow';
 import { useSaveWorkflowVersion } from '@/modules/workflow/hooks/use-save-workflow-version';
 import { useWorkflowBuilder } from '@/modules/workflow/hooks/use-workflow-builder';
+import type { WorkflowDefinition } from '@/modules/workflow/types/workflow-graph';
 
 interface WorkflowBuilderPageProps {
     workflowId: string;
 }
 
 export function WorkflowBuilderPage({ workflowId }: WorkflowBuilderPageProps) {
+    const { user } = useAuth();
+    const userCanWrite = canWrite(user?.role as string | undefined);
     const { workflow, version, initialDefinition, isLoading, isError, error } =
         useWorkflowBuilder(workflowId);
     const saveVersion = useSaveWorkflowVersion();
+    const runWorkflow = useRunWorkflow();
+
+    const triggerRun = () => {
+        runWorkflow.mutate(workflowId, {
+            onSuccess: (run) => {
+                toast.success(`Workflow "${workflow?.name}" started`, {
+                    description: `Run ${run.id} is ${run.status}.`,
+                    action: {
+                        label: 'Monitor',
+                        onClick: () => {
+                            window.location.href = appRoutes.monitoring.runDetail(run.id);
+                        },
+                    },
+                });
+            },
+            onError: (runError) => {
+                toast.error('Failed to run workflow', {
+                    description: runError.message,
+                });
+            },
+        });
+    };
+
+    const handleRun = (definition: WorkflowDefinition, needsSave: boolean) => {
+        if (!userCanWrite) {
+            return;
+        }
+
+        if (saveVersion.isPending || runWorkflow.isPending) {
+            return;
+        }
+
+        const shouldSave = needsSave || workflow?.current_version_id === null;
+
+        if (!shouldSave) {
+            triggerRun();
+
+            return;
+        }
+
+        saveVersion.mutate(
+            {
+                workflowId,
+                definition,
+                changeSummary: 'Updated via workflow builder before run',
+            },
+            {
+                onSuccess: () => {
+                    triggerRun();
+                },
+                onError: (saveError) => {
+                    toast.error('Failed to save workflow before run', {
+                        description: saveError.message,
+                    });
+                },
+            },
+        );
+    };
 
     if (isLoading) {
         return (
@@ -43,6 +108,8 @@ export function WorkflowBuilderPage({ workflowId }: WorkflowBuilderPageProps) {
                 initialDefinition={initialDefinition}
                 versionNumber={version?.version_number}
                 isSaving={saveVersion.isPending}
+                isRunning={runWorkflow.isPending}
+                canRun={userCanWrite}
                 onValidationError={(message) =>
                     toast.error('Validation failed', { description: message })
                 }
@@ -67,6 +134,7 @@ export function WorkflowBuilderPage({ workflowId }: WorkflowBuilderPageProps) {
                         },
                     );
                 }}
+                onRun={userCanWrite ? handleRun : undefined}
             />
         </div>
     );

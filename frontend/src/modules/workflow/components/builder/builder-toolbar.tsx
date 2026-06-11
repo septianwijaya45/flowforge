@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Play, Save } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -10,7 +10,10 @@ interface BuilderToolbarProps {
     versionNumber?: number;
     isDirty: boolean;
     isSaving: boolean;
+    isRunning?: boolean;
+    canRun?: boolean;
     onSave: () => void;
+    onRun?: () => void;
 }
 
 export function BuilderToolbar({
@@ -18,7 +21,10 @@ export function BuilderToolbar({
     versionNumber,
     isDirty,
     isSaving,
+    isRunning = false,
+    canRun = true,
     onSave,
+    onRun,
 }: BuilderToolbarProps) {
     return (
         <header className="flex shrink-0 items-center justify-between gap-4 border-b bg-background px-4 py-3">
@@ -38,10 +44,29 @@ export function BuilderToolbar({
                 </div>
             </div>
 
-            <Button className="shrink-0" onClick={onSave} disabled={isSaving || !isDirty}>
-                {isSaving ? <Spinner /> : <Save className="size-4" />}
-                Save
-            </Button>
+            <div className="flex shrink-0 items-center gap-2">
+                {onRun ? (
+                    <Button
+                        variant="outline"
+                        onClick={onRun}
+                        disabled={isSaving || isRunning || !canRun}
+                        title={
+                            !canRun
+                                ? 'Save the workflow before running.'
+                                : isDirty
+                                  ? 'Save and run the latest graph.'
+                                  : undefined
+                        }
+                    >
+                        {isRunning ? <Spinner /> : <Play className="size-4" />}
+                        {isRunning ? 'Running…' : 'Run'}
+                    </Button>
+                ) : null}
+                <Button onClick={onSave} disabled={isSaving || !isDirty}>
+                    {isSaving ? <Spinner /> : <Save className="size-4" />}
+                    Save
+                </Button>
+            </div>
         </header>
     );
 }

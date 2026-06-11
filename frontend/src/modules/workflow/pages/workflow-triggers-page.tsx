@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
 import { useAuth } from '@/app/providers/auth-provider';
@@ -27,7 +27,7 @@ export function WorkflowTriggersPage({ workflowId, workflowName }: WorkflowTrigg
         <div className="flex flex-col gap-6 p-4 md:p-6">
             <div className="flex flex-wrap items-center gap-3">
                 <Button size="sm" variant="ghost" asChild>
-                    <Link href={appRoutes.workflow.index}>
+                    <Link to={appRoutes.workflow.index}>
                         <ArrowLeft className="size-4" />
                         Back to workflows
                     </Link>
