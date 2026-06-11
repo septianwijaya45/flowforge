@@ -8,7 +8,7 @@ export function NodePalette() {
     };
 
     return (
-        <aside className="flex w-56 shrink-0 flex-col gap-2 border-r bg-muted/30 p-4">
+        <aside className="flex w-56 shrink-0 flex-col gap-2 overflow-y-auto border-r bg-muted/30 p-4">
             <div>
                 <h3 className="text-sm font-semibold">Nodes</h3>
                 <p className="text-xs text-muted-foreground">Drag onto the canvas</p>

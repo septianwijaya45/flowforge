@@ -19,6 +19,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'workflowName' => $workflow->name,
         ]);
     })->name('workflows.builder');
+    Route::get('workflows/{workflow}/triggers', function (Workflow $workflow) {
+        return Inertia::render('workflows/triggers', [
+            'workflowId' => $workflow->id,
+            'workflowName' => $workflow->name,
+        ]);
+    })->name('workflows.triggers');
     Route::inertia('monitoring', 'monitoring/index')->name('monitoring.index');
     Route::get('monitoring/runs/{run}', function (WorkflowRun $run) {
         return Inertia::render('monitoring/runs/show', [

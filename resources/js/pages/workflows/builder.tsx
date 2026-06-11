@@ -11,9 +11,7 @@ export default function WorkflowBuilder({ workflowId, workflowName }: Props) {
     return (
         <>
             <Head title={`Builder · ${workflowName}`} />
-            <div className="-m-4 h-[calc(100vh-3rem)] md:-m-6">
-                <WorkflowBuilderPage workflowId={workflowId} />
-            </div>
+            <WorkflowBuilderPage workflowId={workflowId} />
         </>
     );
 }

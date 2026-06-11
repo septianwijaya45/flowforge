@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 
 import { useAuth } from '@/app/providers/auth-provider';
 import { appRoutes } from '@/core/constants/routes';
+import { canWrite } from '@/core/auth/permissions';
 import { useDebounce } from '@/core/hooks/use-debounce';
 import { WorkflowList } from '@/modules/workflow/components/workflow-list';
 import { WorkflowListPagination } from '@/modules/workflow/components/workflow-list-pagination';
@@ -15,7 +16,8 @@ import { PageHeader } from '@/shared/components/page-header';
 const PER_PAGE = 15;
 
 export function WorkflowsPage() {
-    const { apiAuthReady } = useAuth();
+    const { apiAuthReady, user } = useAuth();
+    const userCanWrite = canWrite(user?.role as string | undefined);
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState<WorkflowStatus | ''>('');
@@ -74,6 +76,7 @@ export function WorkflowsPage() {
             <WorkflowListToolbar
                 search={search}
                 status={status}
+                canWrite={userCanWrite}
                 onSearchChange={handleSearchChange}
                 onStatusChange={handleStatusChange}
             />
@@ -88,6 +91,7 @@ export function WorkflowsPage() {
                 workflows={data?.workflows ?? []}
                 isLoading={isLoading || (isFetching && !data)}
                 runningWorkflowId={runWorkflow.isPending ? runWorkflow.variables : null}
+                canWrite={userCanWrite}
                 onRun={handleRun}
             />
 

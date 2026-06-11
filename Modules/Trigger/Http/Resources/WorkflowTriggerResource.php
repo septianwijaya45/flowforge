@@ -29,6 +29,10 @@ class WorkflowTriggerResource extends JsonResource
                 $this->type->value === 'webhook',
                 $this->webhook_token,
             ),
+            'webhook_url' => $this->when(
+                $this->type->value === 'webhook' && filled($this->webhook_token),
+                url('/api/v1/webhooks/'.$this->webhook_token),
+            ),
             'last_triggered_at' => $this->last_triggered_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

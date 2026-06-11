@@ -16,16 +16,16 @@ export function WorkflowBuilderPage({ workflowId }: WorkflowBuilderPageProps) {
 
     if (isLoading) {
         return (
-            <div className="flex flex-col gap-4 p-6">
-                <Skeleton className="h-10 w-64" />
-                <Skeleton className="h-[600px] w-full" />
+            <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+                <Skeleton className="h-10 w-64 shrink-0" />
+                <Skeleton className="min-h-0 flex-1" />
             </div>
         );
     }
 
     if (isError) {
         return (
-            <p className="m-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-100">
+            <p className="m-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-100">
                 {error?.message ?? 'Failed to load workflow builder.'}
             </p>
         );
@@ -36,34 +36,38 @@ export function WorkflowBuilderPage({ workflowId }: WorkflowBuilderPageProps) {
     }
 
     return (
-        <WorkflowCanvas
-            key={version?.id ?? 'draft'}
-            workflow={workflow}
-            initialDefinition={initialDefinition}
-            versionNumber={version?.version_number}
-            isSaving={saveVersion.isPending}
-            onValidationError={(message) => toast.error('Validation failed', { description: message })}
-            onSave={(definition) => {
-                saveVersion.mutate(
-                    {
-                        workflowId,
-                        definition,
-                        changeSummary: 'Updated via workflow builder',
-                    },
-                    {
-                        onSuccess: (savedVersion) => {
-                            toast.success('Workflow saved', {
-                                description: `Version ${savedVersion.version_number} created.`,
-                            });
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <WorkflowCanvas
+                key={version?.id ?? 'draft'}
+                workflow={workflow}
+                initialDefinition={initialDefinition}
+                versionNumber={version?.version_number}
+                isSaving={saveVersion.isPending}
+                onValidationError={(message) =>
+                    toast.error('Validation failed', { description: message })
+                }
+                onSave={(definition) => {
+                    saveVersion.mutate(
+                        {
+                            workflowId,
+                            definition,
+                            changeSummary: 'Updated via workflow builder',
                         },
-                        onError: (saveError) => {
-                            toast.error('Failed to save workflow', {
-                                description: saveError.message,
-                            });
+                        {
+                            onSuccess: (savedVersion) => {
+                                toast.success('Workflow saved', {
+                                    description: `Version ${savedVersion.version_number} created.`,
+                                });
+                            },
+                            onError: (saveError) => {
+                                toast.error('Failed to save workflow', {
+                                    description: saveError.message,
+                                });
+                            },
                         },
-                    },
-                );
-            }}
-        />
+                    );
+                }}
+            />
+        </div>
     );
 }

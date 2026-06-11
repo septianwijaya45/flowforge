@@ -1,16 +1,20 @@
 import { Link } from '@inertiajs/react';
-import { Pencil, Play } from 'lucide-react';
+import { Pencil, Play, Zap } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { appRoutes } from '@/core/constants/routes';
+import { DeleteWorkflowDialog } from '@/modules/workflow/components/delete-workflow-dialog';
 import { WorkflowStatusBadge } from '@/modules/workflow/components/workflow-status-badge';
+import { useDeleteWorkflow } from '@/modules/workflow/hooks/use-delete-workflow';
 import type { Workflow } from '@/modules/workflow/types/workflow';
 
 interface WorkflowListProps {
     workflows: Workflow[];
     isLoading?: boolean;
     runningWorkflowId?: string | null;
+    canWrite?: boolean;
     onRun: (workflow: Workflow) => void;
 }
 
@@ -28,8 +32,24 @@ export function WorkflowList({
     workflows,
     isLoading = false,
     runningWorkflowId = null,
+    canWrite = false,
     onRun,
 }: WorkflowListProps) {
+    const deleteWorkflow = useDeleteWorkflow();
+
+    const handleDelete = (workflow: Workflow) => {
+        deleteWorkflow.mutate(workflow.id, {
+            onSuccess: () => {
+                toast.success(`Workflow "${workflow.name}" deleted`);
+            },
+            onError: (error) => {
+                toast.error('Failed to delete workflow', {
+                    description: error.message,
+                });
+            },
+        });
+    };
+
     if (isLoading) {
         return <WorkflowListSkeleton />;
     }
@@ -83,6 +103,12 @@ export function WorkflowList({
                                 <td className="px-4 py-3 text-right">
                                     <div className="flex justify-end gap-2">
                                         <Button size="sm" variant="ghost" asChild>
+                                            <Link href={appRoutes.workflow.triggers(workflow.id)}>
+                                                <Zap className="size-4" />
+                                                Triggers
+                                            </Link>
+                                        </Button>
+                                        <Button size="sm" variant="ghost" asChild>
                                             <Link href={appRoutes.workflow.builder(workflow.id)}>
                                                 <Pencil className="size-4" />
                                                 Edit
@@ -91,12 +117,19 @@ export function WorkflowList({
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            disabled={!canRun || isRunning}
+                                            disabled={!canRun || isRunning || !canWrite}
                                             onClick={() => onRun(workflow)}
                                         >
                                             <Play className="size-4" />
                                             {isRunning ? 'Running…' : 'Run'}
                                         </Button>
+                                        {canWrite ? (
+                                            <DeleteWorkflowDialog
+                                                workflow={workflow}
+                                                disabled={deleteWorkflow.isPending}
+                                                onConfirm={() => handleDelete(workflow)}
+                                            />
+                                        ) : null}
                                     </div>
                                 </td>
                             </tr>

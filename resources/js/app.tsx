@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
+import AppBuilderLayout from '@/layouts/app/app-builder-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import InertiaBridgeLayout from '@/layouts/inertia-bridge-layout';
 import SettingsLayout from '@/layouts/settings/layout';
@@ -14,6 +15,8 @@ function resolvePageLayout(name: string) {
     switch (true) {
         case name === 'welcome':
             return null;
+        case name === 'workflows/builder':
+            return AppBuilderLayout;
         case name.startsWith('auth/'):
             return AuthLayout;
         case name.startsWith('settings/'):

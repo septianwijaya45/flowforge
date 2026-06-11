@@ -15,6 +15,8 @@ import {
 import type {Connection} from '@xyflow/react';
 import { useCallback, useMemo, useState } from 'react';
 
+import { useAppearance } from '@/hooks/use-appearance';
+import { cn } from '@/lib/utils';
 import { BuilderToolbar } from '@/modules/workflow/components/builder/builder-toolbar';
 import { NodeConfigPanel } from '@/modules/workflow/components/builder/node-config-panel';
 import { NodePalette } from '@/modules/workflow/components/builder/node-palette';
@@ -54,6 +56,8 @@ function WorkflowCanvasInner({
     onSave,
     onValidationError,
 }: WorkflowCanvasProps) {
+    const { resolvedAppearance } = useAppearance();
+    const isDark = resolvedAppearance === 'dark';
     const { screenToFlowPosition } = useReactFlow();
     const initialFlow = useMemo(() => definitionToFlow(initialDefinition), [initialDefinition]);
     const [nodes, setNodes, onNodesChange] = useNodesState<BuilderNode>(initialFlow.nodes);
@@ -155,7 +159,7 @@ function WorkflowCanvasInner({
     };
 
     return (
-        <div className="flex h-full min-h-[600px] flex-col">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
             <BuilderToolbar
                 workflowName={workflow.name}
                 versionNumber={versionNumber}
@@ -164,10 +168,10 @@ function WorkflowCanvasInner({
                 onSave={handleSave}
             />
 
-            <div className="flex min-h-0 flex-1">
+            <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
                 <NodePalette />
 
-                <div className="min-w-0 flex-1">
+                <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}
@@ -194,11 +198,23 @@ function WorkflowCanvasInner({
                         isValidConnection={(connection) => isValidConnection(connection, nodes)}
                         fitView
                         deleteKeyCode={['Backspace', 'Delete']}
-                        className="bg-background"
+                        className={cn('h-full w-full bg-background', isDark && 'dark')}
                     >
                         <Background gap={16} size={1} />
-                        <Controls />
-                        <MiniMap zoomable pannable />
+                        <Controls
+                            showInteractive={false}
+                            className="overflow-hidden rounded-md border border-border bg-card shadow-sm"
+                        />
+                        <MiniMap
+                            zoomable
+                            pannable
+                            className="overflow-hidden rounded-md border border-border bg-card shadow-sm"
+                            style={{ width: 150, height: 110 }}
+                            nodeColor="var(--muted-foreground)"
+                            maskColor={
+                                isDark ? 'rgba(20, 20, 20, 0.65)' : 'rgba(240, 240, 240, 0.65)'
+                            }
+                        />
                     </ReactFlow>
                 </div>
 

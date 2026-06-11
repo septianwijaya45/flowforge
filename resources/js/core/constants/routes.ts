@@ -10,6 +10,7 @@ export const appRoutes = {
         index: '/workflows',
         detail: (id: string) => `/workflows/${id}`,
         builder: (id: string) => `/workflows/${id}/builder`,
+        triggers: (id: string) => `/workflows/${id}/triggers`,
         runs: (id: string) => `/workflows/${id}/runs`,
     },
     monitoring: {

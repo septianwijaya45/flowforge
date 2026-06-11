@@ -18,7 +18,7 @@ interface NodeConfigPanelProps {
 export function NodeConfigPanel({ node, onUpdate }: NodeConfigPanelProps) {
     if (!node) {
         return (
-            <aside className="flex w-72 shrink-0 flex-col border-l bg-muted/20 p-4">
+            <aside className="flex w-72 shrink-0 flex-col overflow-y-auto border-l bg-muted/20 p-4">
                 <p className="text-sm text-muted-foreground">
                     Select a node to edit its configuration.
                 </p>

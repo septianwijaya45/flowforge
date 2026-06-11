@@ -21,8 +21,8 @@ export function BuilderToolbar({
     onSave,
 }: BuilderToolbarProps) {
     return (
-        <header className="flex items-center justify-between gap-4 border-b bg-background px-4 py-3">
-            <div className="flex min-w-0 items-center gap-3">
+        <header className="flex shrink-0 items-center justify-between gap-4 border-b bg-background px-4 py-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
                 <Button variant="ghost" size="sm" asChild>
                     <Link href={appRoutes.workflow.index}>
                         <ArrowLeft className="size-4" />
@@ -38,7 +38,7 @@ export function BuilderToolbar({
                 </div>
             </div>
 
-            <Button onClick={onSave} disabled={isSaving || !isDirty}>
+            <Button className="shrink-0" onClick={onSave} disabled={isSaving || !isDirty}>
                 {isSaving ? <Spinner /> : <Save className="size-4" />}
                 Save
             </Button>

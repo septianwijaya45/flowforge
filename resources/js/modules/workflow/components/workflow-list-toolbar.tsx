@@ -8,12 +8,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { CreateWorkflowDialog } from '@/modules/workflow/components/create-workflow-dialog';
 import { workflowStatusOptions } from '@/modules/workflow/constants/workflow-status';
 import type { WorkflowStatus } from '@/modules/workflow/types/workflow';
 
 interface WorkflowListToolbarProps {
     search: string;
     status: WorkflowStatus | '';
+    canWrite?: boolean;
     onSearchChange: (value: string) => void;
     onStatusChange: (value: WorkflowStatus | '') => void;
 }
@@ -21,6 +23,7 @@ interface WorkflowListToolbarProps {
 export function WorkflowListToolbar({
     search,
     status,
+    canWrite = false,
     onSearchChange,
     onStatusChange,
 }: WorkflowListToolbarProps) {
@@ -53,6 +56,8 @@ export function WorkflowListToolbar({
                     ))}
                 </SelectContent>
             </Select>
+
+            {canWrite ? <CreateWorkflowDialog /> : null}
         </div>
     );
 }
