@@ -1,0 +1,156 @@
+<mxfile host="app.diagrams.net" agent="FlowForge" version="22.1.0">
+  <diagram id="flowforge-aws" name="FlowForge AWS Architecture">
+    <mxGraphModel dx="1422" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="FlowForge — AWS Production Architecture (ALB + ECS Fargate + RDS + ElastiCache)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="320" y="20" width="960" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Internet / Users -->
+        <mxCell id="users" value="Users / Browsers" style="shape=mxgraph.aws4.users;fillColor=#232F3E;strokeColor=none;fontColor=#ffffff;html=1;verticalAlign=top;verticalLabelPosition=bottom;align=center;" vertex="1" parent="1">
+          <mxGeometry x="720" y="70" width="80" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Route 53 + ACM -->
+        <mxCell id="dns" value="Route 53&#xa;(DNS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="690" y="170" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="acm" value="ACM&#xa;(TLS Certificate)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="860" y="170" width="140" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- VPC -->
+        <mxCell id="vpc" value="VPC (10.0.0.0/16)" style="swimlane;startSize=30;fillColor=#E9F3E6;strokeColor=#248814;fontColor=#248814;fontStyle=1;horizontal=0;" vertex="1" parent="1">
+          <mxGeometry x="80" y="240" width="1440" height="700" as="geometry" />
+        </mxCell>
+
+        <!-- Public Subnets -->
+        <mxCell id="pub_az1" value="Public Subnet — AZ-a (10.0.1.0/24)" style="swimlane;startSize=28;fillColor=#E6F2F8;strokeColor=#147EBA;fontColor=#147EBA;fontStyle=1;" vertex="1" parent="vpc">
+          <mxGeometry x="30" y="50" width="660" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="pub_az2" value="Public Subnet — AZ-b (10.0.2.0/24)" style="swimlane;startSize=28;fillColor=#E6F2F8;strokeColor=#147EBA;fontColor=#147EBA;fontStyle=1;" vertex="1" parent="vpc">
+          <mxGeometry x="720" y="50" width="660" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- ALB spans public subnets -->
+        <mxCell id="alb" value="Application Load Balancer (ALB)&#xa;HTTPS :443&#xa;&#xa;Rules:&#xa;• /api/* → backend TG&#xa;• /up → backend TG&#xa;• /* → frontend TG" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="vpc">
+          <mxGeometry x="280" y="100" width="860" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- NAT -->
+        <mxCell id="nat1" value="NAT Gateway&#xa;AZ-a" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#147EBA;fontColor=#ffffff;" vertex="1" parent="vpc">
+          <mxGeometry x="80" y="120" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="nat2" value="NAT Gateway&#xa;AZ-b" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#147EBA;fontColor=#ffffff;" vertex="1" parent="vpc">
+          <mxGeometry x="1220" y="120" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Private App Subnets -->
+        <mxCell id="app_az1" value="Private App Subnet — AZ-a (10.0.10.0/24)" style="swimlane;startSize=28;fillColor=#EDE7F6;strokeColor=#5C2D91;fontColor=#5C2D91;fontStyle=1;" vertex="1" parent="vpc">
+          <mxGeometry x="30" y="280" width="660" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="app_az2" value="Private App Subnet — AZ-b (10.0.11.0/24)" style="swimlane;startSize=28;fillColor=#EDE7F6;strokeColor=#5C2D91;fontColor=#5C2D91;fontStyle=1;" vertex="1" parent="vpc">
+          <mxGeometry x="720" y="280" width="660" height="220" as="geometry" />
+        </mxCell>
+
+        <!-- ECS Cluster -->
+        <mxCell id="ecs_cluster" value="Amazon ECS Cluster (Fargate)" style="swimlane;startSize=28;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1;strokeColor=#232F3E;" vertex="1" parent="vpc">
+          <mxGeometry x="120" y="320" width="1180" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ecs_frontend" value="ECS Service: flowforge-frontend&#xa;(nginx + React SPA)&#xa;Task × N across AZs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#232F3E;fontColor=#FF9900;fontStyle=1;" vertex="1" parent="ecs_cluster">
+          <mxGeometry x="40" y="50" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ecs_backend" value="ECS Service: flowforge-backend&#xa;(Laravel API + PHP-FPM)&#xa;Task × N across AZs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#232F3E;fontColor=#FF9900;fontStyle=1;" vertex="1" parent="ecs_cluster">
+          <mxGeometry x="340" y="50" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ecs_worker" value="ECS Service: flowforge-worker&#xa;(queue:work redis)&#xa;Task × N" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#232F3E;fontColor=#FF9900;fontStyle=1;" vertex="1" parent="ecs_cluster">
+          <mxGeometry x="640" y="50" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr" value="Amazon ECR&#xa;Container Images" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1;" vertex="1" parent="ecs_cluster">
+          <mxGeometry x="940" y="50" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Private Data Subnets -->
+        <mxCell id="data_az1" value="Private Data Subnet — AZ-a (10.0.20.0/24)" style="swimlane;startSize=28;fillColor=#FCE4EC;strokeColor=#C7131F;fontColor=#C7131F;fontStyle=1;" vertex="1" parent="vpc">
+          <mxGeometry x="30" y="530" width="660" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="data_az2" value="Private Data Subnet — AZ-b (10.0.21.0/24)" style="swimlane;startSize=28;fillColor=#FCE4EC;strokeColor=#C7131F;fontColor=#C7131F;fontStyle=1;" vertex="1" parent="vpc">
+          <mxGeometry x="720" y="530" width="660" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- RDS -->
+        <mxCell id="rds" value="Amazon RDS PostgreSQL 16&#xa;Multi-AZ&#xa;&#xa;Databases:&#xa;• flowforge&#xa;• flowforge_logs" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#3B48CC;fontColor=#ffffff;fontStyle=1;align=left;spacingLeft=8;" vertex="1" parent="vpc">
+          <mxGeometry x="200" y="560" width="280" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ElastiCache -->
+        <mxCell id="redis" value="Amazon ElastiCache Redis 7&#xa;Replication Group (Multi-AZ)&#xa;&#xa;cache • sessions • queues" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#C7131F;fontColor=#ffffff;fontStyle=1;align=left;spacingLeft=8;" vertex="1" parent="vpc">
+          <mxGeometry x="900" y="560" width="300" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Supporting services outside VPC box but on diagram -->
+        <mxCell id="secrets" value="AWS Secrets Manager&#xa;APP_KEY, DB_PASSWORD,&#xa;REDIS_PASSWORD, JWT_SECRET" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DD344C;fontColor=#ffffff;fontStyle=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="960" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cloudwatch" value="Amazon CloudWatch&#xa;Logs + Metrics + Alarms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="960" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cicd" value="GitHub Actions CI&#xa;→ ECR push → ECS deploy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#24292F;fontColor=#ffffff;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="960" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="efs" value="Amazon EFS (optional)&#xa;Laravel storage/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B48CC;fontColor=#ffffff;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="960" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="Amazon S3 (optional)&#xa;File uploads / assets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B48CC;fontColor=#ffffff;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="960" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="users" target="dns">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="dns" target="alb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;fontStyle=1" edge="1" parent="1" source="alb" target="ecs_frontend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="/api/*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;fontStyle=1" edge="1" parent="1" source="alb" target="ecs_backend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="SQL :5432" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;dashed=1;fontStyle=1" edge="1" parent="1" source="ecs_backend" target="rds">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="Redis :6379" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;dashed=1;fontStyle=1" edge="1" parent="1" source="ecs_backend" target="redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="queue jobs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;dashed=1;fontStyle=1" edge="1" parent="1" source="ecs_worker" target="redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="pull images" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="ecs_cluster" target="ecr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="secrets" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="secrets" target="ecs_cluster">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="outbound via NAT" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="ecs_cluster" target="nat1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="deploy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="cicd" target="ecr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend" value="Legend&#xa;━━ Traffic flow&#xa;┄┄ Private network / dependency&#xa;&#xa;SG: ALB → ECS only on app ports&#xa;ECS → RDS:5432, Redis:6379 only" style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingLeft=8;fillColor=#FFFDE7;strokeColor=#F9A825;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="70" width="240" height="120" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
