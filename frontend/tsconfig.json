@@ -1,0 +1,48 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "allowJs": true,
+        "noEmit": true,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "noImplicitAny": true,
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"],
+            "@/app/*": ["./src/app/*"],
+            "@/core/*": ["./src/core/*"],
+            "@/shared/*": ["./src/shared/*"],
+            "@/modules/*": ["./src/modules/*"]
+        },
+        "jsx": "react-jsx"
+    },
+    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "vite.config.ts"],
+    "exclude": [
+        "src/pages/**",
+        "src/app.tsx",
+        "src/app/providers/inertia-auth-sync.tsx",
+        "src/app/providers/session-bridge.tsx",
+        "src/layouts/auth/**",
+        "src/layouts/settings/**",
+        "src/components/app-header.tsx",
+        "src/components/delete-user.tsx",
+        "src/components/manage-passkeys.tsx",
+        "src/components/manage-two-factor.tsx",
+        "src/components/passkey-register.tsx",
+        "src/components/passkey-verify.tsx",
+        "src/components/text-link.tsx",
+        "src/components/two-factor-recovery-codes.tsx",
+        "src/components/two-factor-setup-modal.tsx",
+        "src/hooks/use-two-factor-auth.ts",
+        "src/layouts/inertia-bridge-layout.tsx",
+        "src/layouts/auth-layout.tsx",
+        "src/layouts/app/app-header-layout.tsx",
+        "src/layouts/app/app-builder-layout.tsx",
+        "src/modules/workflow/pages/workflow-triggers-page.tsx"
+    ]
+}

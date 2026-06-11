@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Modules\Auth\Enums\UserRole;
 use Modules\Auth\Models\RefreshToken;
@@ -32,9 +33,13 @@ class SampleDataSeeder extends Seeder
      */
     public function run(): void
     {
-        $defaultTenant = Tenant::query()->updateOrCreate(
+        $defaultTenant = Tenant::query()->firstOrCreate(
             ['slug' => 'default'],
-            ['name' => 'Default Organization', 'is_active' => true],
+            [
+                'id' => '00000000-0000-4000-8000-000000000001',
+                'name' => 'Default Organization',
+                'is_active' => true,
+            ],
         );
 
         $acmeTenant = Tenant::query()->updateOrCreate(
@@ -104,7 +109,7 @@ class SampleDataSeeder extends Seeder
             ['email' => $email],
             [
                 'name' => $name,
-                'password' => User::factory()->make()->password,
+                'password' => Hash::make('password'),
                 'email_verified_at' => now(),
                 'role' => $role,
             ],

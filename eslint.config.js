@@ -56,7 +56,7 @@ export default [
             'import/resolver': {
                 typescript: {
                     alwaysTryTypes: true,
-                    project: './tsconfig.json',
+                    project: './frontend/tsconfig.json',
                 },
                 node: true,
             },
@@ -110,10 +110,10 @@ export default [
             'bootstrap/ssr',
             'tailwind.config.js',
             'vite.config.ts',
-            'resources/js/actions/**',
-            'resources/js/components/ui/*',
-            'resources/js/routes/**',
-            'resources/js/wayfinder/**',
+            'frontend/src/actions/**',
+            'frontend/src/components/ui/*',
+            'frontend/src/routes/**',
+            'frontend/dist/**',
         ],
     },
     prettier,

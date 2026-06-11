@@ -138,8 +138,15 @@ return [
             'username' => env('EXECUTION_LOG_DB_USERNAME', env('DB_USERNAME', 'root')),
             'password' => env('EXECUTION_LOG_DB_PASSWORD', env('DB_PASSWORD', '')),
             'unix_socket' => env('EXECUTION_LOG_DB_SOCKET', env('DB_SOCKET', '')),
-            'charset' => env('EXECUTION_LOG_DB_CHARSET', env('DB_CHARSET', 'utf8mb4')),
-            'collation' => env('EXECUTION_LOG_DB_COLLATION', env('DB_COLLATION', 'utf8mb4_unicode_ci')),
+            'charset' => env('EXECUTION_LOG_DB_CHARSET', env('DB_CHARSET', match (env('EXECUTION_LOG_DB_DRIVER', env('DB_CONNECTION', 'sqlite'))) {
+                'pgsql' => 'utf8',
+                'mysql', 'mariadb' => 'utf8mb4',
+                default => 'utf8',
+            })),
+            'collation' => env('EXECUTION_LOG_DB_COLLATION', env('DB_COLLATION', match (env('EXECUTION_LOG_DB_DRIVER', env('DB_CONNECTION', 'sqlite'))) {
+                'mysql', 'mariadb' => 'utf8mb4_unicode_ci',
+                default => null,
+            })),
             'prefix' => '',
             'prefix_indexes' => true,
             'foreign_key_constraints' => env('EXECUTION_LOG_DB_FOREIGN_KEYS', false),
