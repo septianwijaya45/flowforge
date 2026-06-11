@@ -10,3 +10,6 @@ pest()->extend(TestCase::class)
 
 pest()->extend(TestCase::class)
     ->in('../Modules/Retry/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/Tenant/Tests');
