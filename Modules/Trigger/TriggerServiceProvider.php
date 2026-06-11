@@ -8,8 +8,7 @@ use App\Support\Modules\ModuleServiceProvider;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Route;
 use Modules\Tenant\Contracts\TenantContextContract;
-use Modules\Tenant\Contracts\TenantContextResolverContract;
-use Modules\Tenant\Exceptions\TenantResolutionException;
+use Modules\Tenant\Support\ResolvesRouteTenantContext;
 use Modules\Trigger\Contracts\CronTriggerServiceContract;
 use Modules\Trigger\Contracts\ManualTriggerServiceContract;
 use Modules\Trigger\Contracts\TriggerDispatcherContract;
@@ -25,6 +24,8 @@ use Modules\Workflow\Models\Workflow;
 
 class TriggerServiceProvider extends ModuleServiceProvider
 {
+    use ResolvesRouteTenantContext;
+
     public function moduleName(): string
     {
         return 'Trigger';
@@ -48,17 +49,9 @@ class TriggerServiceProvider extends ModuleServiceProvider
                 throw (new ModelNotFoundException)->setModel(WorkflowTrigger::class, [$value]);
             }
 
-            $context = app(TenantContextContract::class);
+            $this->ensureRouteTenantContext(WorkflowTrigger::class, $value);
 
-            if (! $context->hasTenant()) {
-                try {
-                    $context->set(
-                        app(TenantContextResolverContract::class)->resolveFromRequest(request()),
-                    );
-                } catch (TenantResolutionException) {
-                    throw (new ModelNotFoundException)->setModel(WorkflowTrigger::class, [$value]);
-                }
-            }
+            $context = app(TenantContextContract::class);
 
             $trigger = WorkflowTrigger::query()
                 ->whereKey($value)

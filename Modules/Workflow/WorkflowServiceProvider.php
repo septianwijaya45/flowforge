@@ -8,14 +8,15 @@ use App\Support\Modules\ModuleServiceProvider;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Route;
 use Modules\Tenant\Contracts\TenantContextContract;
-use Modules\Tenant\Contracts\TenantContextResolverContract;
-use Modules\Tenant\Exceptions\TenantResolutionException;
+use Modules\Tenant\Support\ResolvesRouteTenantContext;
 use Modules\Workflow\Contracts\WorkflowServiceContract;
 use Modules\Workflow\Models\Workflow;
 use Modules\Workflow\Services\WorkflowService;
 
 class WorkflowServiceProvider extends ModuleServiceProvider
 {
+    use ResolvesRouteTenantContext;
+
     public function moduleName(): string
     {
         return 'Workflow';
@@ -29,17 +30,9 @@ class WorkflowServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         Route::bind('workflow', function (string $value): Workflow {
-            $context = app(TenantContextContract::class);
+            $this->ensureRouteTenantContext(Workflow::class, $value);
 
-            if (! $context->hasTenant()) {
-                try {
-                    $context->set(
-                        app(TenantContextResolverContract::class)->resolveFromRequest(request()),
-                    );
-                } catch (TenantResolutionException) {
-                    throw (new ModelNotFoundException)->setModel(Workflow::class, [$value]);
-                }
-            }
+            $context = app(TenantContextContract::class);
 
             $workflow = Workflow::query()
                 ->whereKey($value)

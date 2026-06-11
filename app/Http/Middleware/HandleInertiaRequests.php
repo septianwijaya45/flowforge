@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use Modules\Tenant\Models\Tenant;
+use Modules\Tenant\Services\SessionTenantResolver;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -52,21 +52,10 @@ class HandleInertiaRequests extends Middleware
      */
     private function resolveSharedTenant(Request $request): ?array
     {
-        if ($request->user() === null) {
+        $tenant = app(SessionTenantResolver::class)->resolve($request);
+
+        if ($tenant === null) {
             return null;
-        }
-
-        $tenantId = $request->session()->get('tenant_id');
-        $tenant = $tenantId !== null
-            ? Tenant::query()->find($tenantId)
-            : Tenant::query()->where('is_active', true)->orderBy('created_at')->first();
-
-        if ($tenant === null || ! $tenant->is_active) {
-            return null;
-        }
-
-        if ($request->session()->get('tenant_id') !== $tenant->id) {
-            $request->session()->put('tenant_id', $tenant->id);
         }
 
         return [
