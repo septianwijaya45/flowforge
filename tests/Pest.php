@@ -13,3 +13,6 @@ pest()->extend(TestCase::class)
 
 pest()->extend(TestCase::class)
     ->in('../Modules/Tenant/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/Auth/Tests');

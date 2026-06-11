@@ -46,6 +46,11 @@ class EnsureTenantContext
 
     private function shouldBypass(Request $request): bool
     {
-        return $request->is('api/v1/tenants', 'api/v1/tenants/*');
+        return $request->is(
+            'api/v1/tenants',
+            'api/v1/tenants/*',
+            'api/v1/auth',
+            'api/v1/auth/*',
+        );
     }
 }
