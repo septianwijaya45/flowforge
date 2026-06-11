@@ -95,6 +95,14 @@ it('lists active workflow runs for monitoring', function (): void {
         ->assertJsonPath('data.runs.0.workflow_name', 'Monitored Workflow');
 });
 
+it('accepts active_only as a true query string from clients', function (): void {
+    $context = monitoringApiContext();
+
+    $response = $this->getJson('/api/v1/monitoring/runs?active_only=true', $context['headers']);
+
+    $response->assertSuccessful();
+});
+
 it('returns a workflow run with live step statuses', function (): void {
     $context = monitoringApiContext();
 

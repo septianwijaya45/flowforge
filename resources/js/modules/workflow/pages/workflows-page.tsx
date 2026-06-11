@@ -15,7 +15,7 @@ import { PageHeader } from '@/shared/components/page-header';
 const PER_PAGE = 15;
 
 export function WorkflowsPage() {
-    const { isAuthenticated } = useAuth();
+    const { apiAuthReady } = useAuth();
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState<WorkflowStatus | ''>('');
@@ -28,7 +28,7 @@ export function WorkflowsPage() {
             search: debouncedSearch,
             status,
         },
-        { enabled: isAuthenticated },
+        { enabled: apiAuthReady },
     );
 
     const runWorkflow = useRunWorkflow();

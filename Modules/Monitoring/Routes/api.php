@@ -7,7 +7,7 @@ use Modules\Monitoring\Http\Controllers\WorkflowRunMonitorController;
 use Modules\Tenant\Http\Middleware\EnsureTenantContext;
 
 Route::prefix('monitoring')
-    ->middleware(['auth:api', EnsureTenantContext::class])
+    ->middleware(['auth:web,api', EnsureTenantContext::class])
     ->group(function (): void {
         Route::get('metrics', [WorkflowRunMonitorController::class, 'metrics']);
         Route::get('runs', [WorkflowRunMonitorController::class, 'index']);

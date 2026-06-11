@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Modules\Tenant\Models\Tenant;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -41,7 +42,37 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'tenant' => fn () => $this->resolveSharedTenant($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+        ];
+    }
+
+    /**
+     * @return array{id: string, name: string, slug: string}|null
+     */
+    private function resolveSharedTenant(Request $request): ?array
+    {
+        if ($request->user() === null) {
+            return null;
+        }
+
+        $tenantId = $request->session()->get('tenant_id');
+        $tenant = $tenantId !== null
+            ? Tenant::query()->find($tenantId)
+            : Tenant::query()->where('is_active', true)->orderBy('created_at')->first();
+
+        if ($tenant === null || ! $tenant->is_active) {
+            return null;
+        }
+
+        if ($request->session()->get('tenant_id') !== $tenant->id) {
+            $request->session()->put('tenant_id', $tenant->id);
+        }
+
+        return [
+            'id' => $tenant->id,
+            'name' => $tenant->name,
+            'slug' => $tenant->slug,
         ];
     }
 }

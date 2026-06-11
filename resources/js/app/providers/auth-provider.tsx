@@ -7,11 +7,13 @@ import type { User } from '@/types';
 interface AuthContextValue {
     user: User | null;
     isAuthenticated: boolean;
+    apiAuthReady: boolean;
 }
 
 interface AuthContextState {
     value: AuthContextValue;
     setUser: Dispatch<SetStateAction<User | null>>;
+    setApiAuthReady: Dispatch<SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextState | null>(null);
@@ -22,17 +24,19 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
     const [user, setUser] = useState<User | null>(null);
+    const [apiAuthReady, setApiAuthReady] = useState(false);
 
     const value = useMemo<AuthContextValue>(
         () => ({
             user,
             isAuthenticated: user !== null || session.isAuthenticated(),
+            apiAuthReady,
         }),
-        [user],
+        [user, apiAuthReady],
     );
 
     const state = useMemo<AuthContextState>(
-        () => ({ value, setUser }),
+        () => ({ value, setUser, setApiAuthReady }),
         [value],
     );
 

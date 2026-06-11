@@ -16,11 +16,11 @@ interface RunDetailPageProps {
 }
 
 export function RunDetailPage({ runId }: RunDetailPageProps) {
-    const { isAuthenticated } = useAuth();
+    const { apiAuthReady } = useAuth();
     const echoEnabled = getEcho() !== null;
 
     const { data: run, isLoading, isError, error } = useRunDetail(runId, {
-        enabled: isAuthenticated,
+        enabled: apiAuthReady,
     });
 
     useRunRealtime(runId);

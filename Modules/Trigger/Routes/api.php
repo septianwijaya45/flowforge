@@ -11,7 +11,7 @@ use Modules\Trigger\Http\Controllers\WorkflowTriggerController;
 
 Route::post('webhooks/{token}', [WebhookTriggerController::class, 'handle']);
 
-Route::middleware(['auth:api', EnsureTenantContext::class])->group(function (): void {
+Route::middleware(['auth:web,api', EnsureTenantContext::class])->group(function (): void {
     Route::post('triggers/cron/process', [CronTriggerController::class, 'process']);
 
     Route::prefix('workflows/{workflow}')->group(function (): void {

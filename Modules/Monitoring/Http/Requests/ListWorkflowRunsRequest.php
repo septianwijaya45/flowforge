@@ -17,6 +17,15 @@ class ListWorkflowRunsRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('active_only')) {
+            $this->merge([
+                'active_only' => $this->boolean('active_only'),
+            ]);
+        }
+    }
+
     /**
      * @return array<string, list<string|Enum>>
      */
