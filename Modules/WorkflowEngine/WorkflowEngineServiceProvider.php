@@ -6,7 +6,9 @@ namespace Modules\WorkflowEngine;
 
 use App\Support\Modules\ModuleServiceProvider;
 use Modules\WorkflowEngine\Contracts\WorkflowGraphValidatorContract;
+use Modules\WorkflowEngine\Contracts\WorkflowTopologicalSorterContract;
 use Modules\WorkflowEngine\Services\WorkflowGraphValidator;
+use Modules\WorkflowEngine\Services\WorkflowTopologicalSorter;
 
 class WorkflowEngineServiceProvider extends ModuleServiceProvider
 {
@@ -20,6 +22,11 @@ class WorkflowEngineServiceProvider extends ModuleServiceProvider
         $this->app->singleton(
             WorkflowGraphValidatorContract::class,
             WorkflowGraphValidator::class,
+        );
+
+        $this->app->singleton(
+            WorkflowTopologicalSorterContract::class,
+            WorkflowTopologicalSorter::class,
         );
     }
 }
