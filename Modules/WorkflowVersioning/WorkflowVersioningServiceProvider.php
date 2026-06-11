@@ -8,8 +8,7 @@ use App\Support\Modules\ModuleServiceProvider;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Route;
 use Modules\Tenant\Contracts\TenantContextContract;
-use Modules\Tenant\Contracts\TenantContextResolverContract;
-use Modules\Tenant\Exceptions\TenantResolutionException;
+use Modules\Tenant\Support\ResolvesRouteTenantContext;
 use Modules\Workflow\Models\Workflow;
 use Modules\Workflow\Models\WorkflowVersion;
 use Modules\WorkflowVersioning\Contracts\WorkflowVersioningServiceContract;
@@ -17,6 +16,8 @@ use Modules\WorkflowVersioning\Services\WorkflowVersioningService;
 
 class WorkflowVersioningServiceProvider extends ModuleServiceProvider
 {
+    use ResolvesRouteTenantContext;
+
     public function moduleName(): string
     {
         return 'WorkflowVersioning';
@@ -39,17 +40,9 @@ class WorkflowVersioningServiceProvider extends ModuleServiceProvider
                 throw (new ModelNotFoundException)->setModel(WorkflowVersion::class, [$value]);
             }
 
-            $context = app(TenantContextContract::class);
+            $this->ensureRouteTenantContext(WorkflowVersion::class, $value);
 
-            if (! $context->hasTenant()) {
-                try {
-                    $context->set(
-                        app(TenantContextResolverContract::class)->resolveFromRequest(request()),
-                    );
-                } catch (TenantResolutionException) {
-                    throw (new ModelNotFoundException)->setModel(WorkflowVersion::class, [$value]);
-                }
-            }
+            $context = app(TenantContextContract::class);
 
             $version = WorkflowVersion::query()
                 ->whereKey($value)

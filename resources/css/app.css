@@ -132,6 +132,18 @@
     --sidebar-ring: oklch(0.439 0 0);
 }
 
+@layer components {
+    .react-flow.dark {
+        --xy-minimap-background-color: var(--card);
+        --xy-minimap-node-background-color: var(--muted);
+        --xy-controls-button-background-color: var(--card);
+        --xy-controls-button-background-color-hover: var(--muted);
+        --xy-controls-button-border-color: var(--border);
+        --xy-controls-box-shadow-default: none;
+        --xy-background-pattern-dots-color-default: var(--border);
+    }
+}
+
 @layer base {
     * {
         @apply border-border;

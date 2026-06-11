@@ -24,6 +24,20 @@ class WorkflowVersionController extends Controller
         private readonly WorkflowVersioningServiceContract $versioningService,
     ) {}
 
+    public function current(Workflow $workflow): JsonResponse
+    {
+        $version = $workflow->currentVersion;
+
+        if ($version === null) {
+            return ApiResponse::error('No workflow version exists yet.', status: Response::HTTP_NOT_FOUND);
+        }
+
+        return ApiResponse::success(
+            ['version' => (new WorkflowVersionResource($version, $workflow))->resolve()],
+            'Current workflow version retrieved',
+        );
+    }
+
     public function index(ListWorkflowVersionsRequest $request, Workflow $workflow): JsonResponse
     {
         $paginator = $this->versioningService->history($workflow, $request->toDto());

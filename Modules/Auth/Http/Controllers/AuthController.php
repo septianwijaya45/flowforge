@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Auth\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\Auth\Contracts\JwtAuthServiceContract;
 use Modules\Auth\DTOs\LoginCredentialsDTO;
@@ -62,5 +63,19 @@ class AuthController extends Controller
         );
 
         return ApiResponse::success(message: 'Logout successful');
+    }
+
+    public function sessionToken(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return ApiResponse::error('Unauthenticated.', status: 401);
+        }
+
+        return ApiResponse::success(
+            $this->jwtAuthService->issueForUser($user)->toArray(),
+            'Session token issued',
+        );
     }
 }

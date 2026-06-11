@@ -36,6 +36,14 @@ class WorkflowController extends Controller
         ], 'Workflows retrieved');
     }
 
+    public function show(Workflow $workflow): JsonResponse
+    {
+        return ApiResponse::success(
+            ['workflow' => (new WorkflowResource($workflow))->resolve()],
+            'Workflow retrieved',
+        );
+    }
+
     public function store(StoreWorkflowRequest $request): JsonResponse
     {
         $workflow = $this->workflowService->create($request->toDto());

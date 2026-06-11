@@ -41,11 +41,13 @@ class User extends Authenticatable implements PasskeyUser
 
     protected static function booted(): void
     {
-        static::creating(function (User $user): void {
+        static::saving(function (User $user): void {
             if (empty($user->uuid)) {
                 $user->uuid = (string) Str::uuid();
             }
+        });
 
+        static::creating(function (User $user): void {
             if (($user->getAttributes()['role'] ?? null) === null) {
                 $user->role = UserRole::Viewer;
             }

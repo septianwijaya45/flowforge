@@ -17,4 +17,6 @@ interface JwtAuthServiceContract
     public function logout(User $user, string $refreshToken): void;
 
     public function authenticateAccessToken(string $token): User;
+
+    public function issueForUser(User $user): TokenPairDTO;
 }

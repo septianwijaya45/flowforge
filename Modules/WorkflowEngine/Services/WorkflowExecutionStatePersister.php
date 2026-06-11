@@ -6,6 +6,7 @@ namespace Modules\WorkflowEngine\Services;
 
 use Illuminate\Support\Carbon;
 use Modules\WorkflowEngine\Contracts\WorkflowExecutionStatePersisterContract;
+use Modules\WorkflowEngine\Contracts\WorkflowRunBroadcastContract;
 use Modules\WorkflowEngine\DTOs\WorkflowExecutionResultDTO;
 use Modules\WorkflowEngine\DTOs\WorkflowGraphDTO;
 use Modules\WorkflowEngine\DTOs\WorkflowStepExecutionResultDTO;
@@ -17,6 +18,10 @@ use Throwable;
 
 class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersisterContract
 {
+    public function __construct(
+        private readonly WorkflowRunBroadcastContract $broadcaster,
+    ) {}
+
     public function initializeSteps(WorkflowRun $run, WorkflowGraphDTO $graph, array $layers): void
     {
         if ($run->steps()->exists()) {
@@ -48,6 +53,8 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
                 $executionOrder++;
             }
         }
+
+        $this->broadcaster->runUpdated($run->refresh()->load('steps'));
     }
 
     public function markRunRunning(WorkflowRun $run): void
@@ -56,6 +63,8 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
             'status' => WorkflowRunStatus::Running,
             'started_at' => Carbon::now(),
         ])->save();
+
+        $this->broadcaster->runUpdated($run->refresh());
     }
 
     public function markStepRunning(WorkflowRunStep $step): void
@@ -64,6 +73,8 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
             'status' => WorkflowRunStepStatus::Running,
             'started_at' => Carbon::now(),
         ])->save();
+
+        $this->broadcaster->stepUpdated($step->refresh());
     }
 
     public function markStepSuccess(WorkflowRunStep $step, WorkflowStepExecutionResultDTO $result): void
@@ -77,6 +88,8 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
             'completed_at' => $completedAt,
             'duration_ms' => $result->durationMs ?? $this->calculateDurationMs($step->started_at, $completedAt),
         ])->save();
+
+        $this->broadcaster->stepUpdated($step->refresh());
     }
 
     public function markStepFailed(WorkflowRunStep $step, WorkflowStepExecutionResultDTO $result): void
@@ -90,6 +103,8 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
             'completed_at' => $completedAt,
             'duration_ms' => $result->durationMs ?? $this->calculateDurationMs($step->started_at, $completedAt),
         ])->save();
+
+        $this->broadcaster->stepUpdated($step->refresh());
     }
 
     public function markRunSuccess(WorkflowRun $run, array $output): WorkflowExecutionResultDTO
@@ -100,6 +115,8 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
             'error' => null,
             'completed_at' => Carbon::now(),
         ])->save();
+
+        $this->broadcaster->runUpdated($run->refresh()->load('steps'));
 
         return WorkflowExecutionResultDTO::success($run->id, $output);
     }
@@ -116,6 +133,8 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
             'completed_at' => Carbon::now(),
         ])->save();
 
+        $this->broadcaster->runUpdated($run->refresh()->load('steps'));
+
         return WorkflowExecutionResultDTO::failed($run->id, $failedStep->nodeId, $error);
     }
 
@@ -129,6 +148,8 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
         $run->steps()
             ->where('status', WorkflowRunStepStatus::Pending)
             ->update(['status' => WorkflowRunStepStatus::Cancelled]);
+
+        $this->broadcaster->runUpdated($run->refresh()->load('steps'));
 
         return WorkflowExecutionResultDTO::cancelled($run->id);
     }
@@ -145,6 +166,8 @@ class WorkflowExecutionStatePersister implements WorkflowExecutionStatePersister
             'error' => $error,
             'completed_at' => Carbon::now(),
         ])->save();
+
+        $this->broadcaster->runUpdated($run->refresh()->load('steps'));
 
         return WorkflowExecutionResultDTO::failed($run->id, 'engine', $error);
     }
