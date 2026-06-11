@@ -21,6 +21,7 @@
             <directory>Modules/Trigger/Tests</directory>
             <directory>Modules/Monitoring/Tests</directory>
             <directory>Modules/ExecutionLog/Tests</directory>
+            <directory>Modules/AI/Tests</directory>
         </testsuite>
     </testsuites>
     <source>
