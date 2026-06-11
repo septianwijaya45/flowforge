@@ -23,5 +23,6 @@ export const appRoutes = {
     },
     ai: {
         assistant: '/ai/assistant',
+        generator: '/ai/generator',
     },
 } as const;
