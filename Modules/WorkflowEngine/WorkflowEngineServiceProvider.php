@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\WorkflowEngine;
 
 use App\Support\Modules\ModuleServiceProvider;
+use Modules\WorkflowEngine\Console\ExplainWorkflowRunQueriesCommand;
 use Modules\WorkflowEngine\Contracts\DelaySleeperContract;
 use Modules\WorkflowEngine\Contracts\WorkflowExecutionEngineContract;
 use Modules\WorkflowEngine\Contracts\WorkflowExecutionStatePersisterContract;
@@ -86,5 +87,16 @@ class WorkflowEngineServiceProvider extends ModuleServiceProvider
             WorkflowTimeoutManagerContract::class,
             WorkflowTimeoutManager::class,
         );
+    }
+
+    public function boot(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ExplainWorkflowRunQueriesCommand::class,
+            ]);
+        }
+
+        parent::boot();
     }
 }

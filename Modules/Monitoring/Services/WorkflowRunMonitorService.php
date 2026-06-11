@@ -6,12 +6,12 @@ namespace Modules\Monitoring\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Modules\Monitoring\Contracts\WorkflowRunMonitorServiceContract;
 use Modules\Monitoring\DTOs\ListWorkflowRunsDTO;
 use Modules\Monitoring\DTOs\WorkflowRunMetricsDTO;
 use Modules\WorkflowEngine\Enums\WorkflowRunStatus;
 use Modules\WorkflowEngine\Models\WorkflowRun;
+use Modules\WorkflowEngine\Support\WorkflowRunQueryExpressions;
 
 class WorkflowRunMonitorService implements WorkflowRunMonitorServiceContract
 {
@@ -21,7 +21,18 @@ class WorkflowRunMonitorService implements WorkflowRunMonitorServiceContract
     public function paginate(ListWorkflowRunsDTO $filters): LengthAwarePaginator
     {
         $query = WorkflowRun::query()
-            ->with(['workflow'])
+            ->select([
+                'id',
+                'tenant_id',
+                'workflow_id',
+                'workflow_version_id',
+                'status',
+                'trigger_type',
+                'started_at',
+                'completed_at',
+                'created_at',
+            ])
+            ->with(['workflow:id,name'])
             ->orderByDesc('created_at');
 
         if ($filters->status !== null) {
@@ -43,12 +54,35 @@ class WorkflowRunMonitorService implements WorkflowRunMonitorServiceContract
 
     public function show(WorkflowRun $run): WorkflowRun
     {
-        return $run->load(['workflow', 'steps']);
+        return $run->load([
+            'workflow:id,name,slug',
+            'steps' => fn ($query) => $query
+                ->select([
+                    'id',
+                    'workflow_run_id',
+                    'node_id',
+                    'node_type',
+                    'node_label',
+                    'status',
+                    'attempt',
+                    'execution_order',
+                    'error',
+                    'started_at',
+                    'completed_at',
+                    'duration_ms',
+                ])
+                ->orderBy('execution_order'),
+        ]);
     }
 
     public function metrics(int $days = 30): WorkflowRunMetricsDTO
     {
         $since = Carbon::now()->subDays($days)->startOfDay();
+        $expressions = WorkflowRunQueryExpressions::forConnection(
+            WorkflowRun::query()->getConnection(),
+        );
+        $durationMs = $expressions->executionDurationMs();
+        $dateExpression = $expressions->dateFromCreatedAt();
 
         $activeRuns = WorkflowRun::query()
             ->whereIn('status', [
@@ -57,35 +91,37 @@ class WorkflowRunMonitorService implements WorkflowRunMonitorServiceContract
             ])
             ->count();
 
-        $runsInPeriod = WorkflowRun::query()
+        $totalsRow = WorkflowRun::query()
             ->where('created_at', '>=', $since)
-            ->get(['status', 'started_at', 'completed_at', 'created_at']);
+            ->whereIn('status', $this->terminalStatuses())
+            ->selectRaw('
+                COUNT(*) as completed,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as success,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as failed,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as timed_out,
+                AVG(CASE WHEN started_at IS NOT NULL AND completed_at IS NOT NULL THEN '.$durationMs.' END) as avg_execution_time_ms
+            ', [
+                WorkflowRunStatus::Success->value,
+                WorkflowRunStatus::Failed->value,
+                WorkflowRunStatus::Cancelled->value,
+                WorkflowRunStatus::TimedOut->value,
+            ])
+            ->first();
 
-        $terminalRuns = $runsInPeriod->filter(
-            fn (WorkflowRun $run): bool => in_array($run->status, [
-                WorkflowRunStatus::Success,
-                WorkflowRunStatus::Failed,
-                WorkflowRunStatus::Cancelled,
-                WorkflowRunStatus::TimedOut,
-            ], true),
-        );
-
-        $successCount = $terminalRuns->where('status', WorkflowRunStatus::Success)->count();
-        $failedCount = $terminalRuns->where('status', WorkflowRunStatus::Failed)->count();
-        $cancelledCount = $terminalRuns->where('status', WorkflowRunStatus::Cancelled)->count();
-        $timedOutCount = $terminalRuns->where('status', WorkflowRunStatus::TimedOut)->count();
-        $completedTotal = $terminalRuns->count();
-
+        $completedTotal = (int) ($totalsRow->completed ?? 0);
+        $successCount = (int) ($totalsRow->success ?? 0);
+        $failedCount = (int) ($totalsRow->failed ?? 0);
+        $cancelledCount = (int) ($totalsRow->cancelled ?? 0);
+        $timedOutCount = (int) ($totalsRow->timed_out ?? 0);
         $failureTotal = $failedCount + $timedOutCount;
 
         $successRate = $completedTotal > 0 ? ($successCount / $completedTotal) * 100 : 0.0;
         $failureRate = $completedTotal > 0 ? ($failureTotal / $completedTotal) * 100 : 0.0;
 
-        $avgExecutionTimeMs = $this->averageExecutionTimeMs(
-            $runsInPeriod->filter(
-                fn (WorkflowRun $run): bool => $run->started_at !== null && $run->completed_at !== null,
-            ),
-        );
+        $avgExecutionTimeMs = $totalsRow->avg_execution_time_ms !== null
+            ? (float) $totalsRow->avg_execution_time_ms
+            : null;
 
         return new WorkflowRunMetricsDTO(
             activeRuns: $activeRuns,
@@ -99,60 +135,64 @@ class WorkflowRunMonitorService implements WorkflowRunMonitorServiceContract
                 'cancelled' => $cancelledCount,
                 'timed_out' => $timedOutCount,
             ],
-            daily: $this->buildDailyMetrics($runsInPeriod, $since, $days),
+            daily: $this->buildDailyMetrics($since, $days, $dateExpression, $durationMs),
         );
     }
 
     /**
-     * @param  Collection<int, WorkflowRun>  $runs
+     * @return list<WorkflowRunStatus>
      */
-    private function averageExecutionTimeMs(Collection $runs): ?float
+    private function terminalStatuses(): array
     {
-        if ($runs->isEmpty()) {
-            return null;
-        }
-
-        $totalMs = $runs->sum(
-            fn (WorkflowRun $run): int => (int) $run->started_at?->diffInMilliseconds($run->completed_at),
-        );
-
-        return $totalMs / $runs->count();
+        return [
+            WorkflowRunStatus::Success,
+            WorkflowRunStatus::Failed,
+            WorkflowRunStatus::Cancelled,
+            WorkflowRunStatus::TimedOut,
+        ];
     }
 
     /**
-     * @param  Collection<int, WorkflowRun>  $runs
      * @return list<array{date: string, runs: int, success: int, failed: int, avg_execution_time_ms: int|null}>
      */
-    private function buildDailyMetrics(Collection $runs, Carbon $since, int $days): array
-    {
+    private function buildDailyMetrics(
+        Carbon $since,
+        int $days,
+        string $dateExpression,
+        string $durationMs,
+    ): array {
+        $dailyRows = WorkflowRun::query()
+            ->where('created_at', '>=', $since)
+            ->selectRaw('
+                '.$dateExpression.' as date,
+                COUNT(*) as runs,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as success,
+                SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END) as failed,
+                AVG(CASE WHEN started_at IS NOT NULL AND completed_at IS NOT NULL THEN '.$durationMs.' END) as avg_execution_time_ms
+            ', [
+                WorkflowRunStatus::Success->value,
+                WorkflowRunStatus::Failed->value,
+                WorkflowRunStatus::TimedOut->value,
+            ])
+            ->groupByRaw($dateExpression)
+            ->orderBy('date')
+            ->get()
+            ->keyBy(static fn ($row): string => (string) $row->date);
+
         $daily = [];
 
         for ($offset = $days - 1; $offset >= 0; $offset--) {
             $date = Carbon::now()->subDays($offset)->toDateString();
-
-            $dayRuns = $runs->filter(
-                fn (WorkflowRun $run): bool => $run->created_at?->toDateString() === $date,
-            );
-
-            $failed = $dayRuns->filter(
-                fn (WorkflowRun $run): bool => in_array($run->status, [
-                    WorkflowRunStatus::Failed,
-                    WorkflowRunStatus::TimedOut,
-                ], true),
-            )->count();
-
-            $completedDayRuns = $dayRuns->filter(
-                fn (WorkflowRun $run): bool => $run->started_at !== null && $run->completed_at !== null,
-            );
-
-            $avgMs = $this->averageExecutionTimeMs($completedDayRuns);
+            $row = $dailyRows->get($date);
 
             $daily[] = [
                 'date' => $date,
-                'runs' => $dayRuns->count(),
-                'success' => $dayRuns->where('status', WorkflowRunStatus::Success)->count(),
-                'failed' => $failed,
-                'avg_execution_time_ms' => $avgMs !== null ? (int) round($avgMs) : null,
+                'runs' => (int) ($row->runs ?? 0),
+                'success' => (int) ($row->success ?? 0),
+                'failed' => (int) ($row->failed ?? 0),
+                'avg_execution_time_ms' => $row?->avg_execution_time_ms !== null
+                    ? (int) round((float) $row->avg_execution_time_ms)
+                    : null,
             ];
         }
 

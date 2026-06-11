@@ -105,7 +105,10 @@ class WorkflowExecutionEngine implements WorkflowExecutionEngineContract
         Collection $nodesById,
         array $executionContext,
     ): array {
-        $stepsByNodeId = $run->steps()->get()->keyBy(static fn (WorkflowRunStep $step): string => $step->node_id);
+        $stepsByNodeId = $run->steps()
+            ->orderBy('execution_order')
+            ->get()
+            ->keyBy(static fn (WorkflowRunStep $step): string => $step->node_id);
 
         $tasks = [];
 
