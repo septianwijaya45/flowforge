@@ -1,14 +1,16 @@
-import { Play } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Pencil, Play } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { appRoutes } from '@/core/constants/routes';
 import { WorkflowStatusBadge } from '@/modules/workflow/components/workflow-status-badge';
 import type { Workflow } from '@/modules/workflow/types/workflow';
 
 interface WorkflowListProps {
     workflows: Workflow[];
     isLoading?: boolean;
-    runningWorkflowId?: number | null;
+    runningWorkflowId?: string | null;
     onRun: (workflow: Workflow) => void;
 }
 
@@ -79,15 +81,23 @@ export function WorkflowList({
                                     {new Date(workflow.updated_at).toLocaleDateString()}
                                 </td>
                                 <td className="px-4 py-3 text-right">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        disabled={!canRun || isRunning}
-                                        onClick={() => onRun(workflow)}
-                                    >
-                                        <Play className="size-4" />
-                                        {isRunning ? 'Running…' : 'Run'}
-                                    </Button>
+                                    <div className="flex justify-end gap-2">
+                                        <Button size="sm" variant="ghost" asChild>
+                                            <Link href={appRoutes.workflow.builder(workflow.id)}>
+                                                <Pencil className="size-4" />
+                                                Edit
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            disabled={!canRun || isRunning}
+                                            onClick={() => onRun(workflow)}
+                                        >
+                                            <Play className="size-4" />
+                                            {isRunning ? 'Running…' : 'Run'}
+                                        </Button>
+                                    </div>
                                 </td>
                             </tr>
                         );

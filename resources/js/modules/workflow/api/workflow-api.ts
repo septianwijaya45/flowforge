@@ -24,8 +24,8 @@ export const workflowApi = {
     create: (payload: Pick<Workflow, 'name' | 'description'> & { slug?: string }) =>
         serviceClients.workflow.post<WorkflowMutationResponse>('/workflows', payload),
 
-    update: (id: number, payload: Partial<Pick<Workflow, 'name' | 'description' | 'status'>>) =>
+    update: (id: string, payload: Partial<Pick<Workflow, 'name' | 'description' | 'status'>>) =>
         serviceClients.workflow.put<WorkflowMutationResponse>(`/workflows/${id}`, payload),
 
-    destroy: (id: number) => serviceClients.workflow.delete(`/workflows/${id}`),
+    destroy: (id: string) => serviceClients.workflow.delete(`/workflows/${id}`),
 };

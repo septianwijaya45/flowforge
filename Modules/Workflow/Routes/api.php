@@ -11,6 +11,7 @@ Route::prefix('workflows')
     ->group(function (): void {
         Route::get('/', [WorkflowController::class, 'index']);
         Route::post('/', [WorkflowController::class, 'store']);
+        Route::get('/{workflow}', [WorkflowController::class, 'show']);
         Route::put('/{workflow}', [WorkflowController::class, 'update']);
         Route::delete('/{workflow}', [WorkflowController::class, 'destroy']);
     });

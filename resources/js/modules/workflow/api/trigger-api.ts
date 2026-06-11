@@ -10,7 +10,7 @@ interface RunWorkflowResponse {
 }
 
 export const triggerApi = {
-    runManual: (workflowId: number, input?: Record<string, unknown>) =>
+    runManual: (workflowId: string, input?: Record<string, unknown>) =>
         serviceClients.workflow.post<RunWorkflowResponse>(
             `/workflows/${workflowId}/trigger/manual`,
             { input: input ?? {} },

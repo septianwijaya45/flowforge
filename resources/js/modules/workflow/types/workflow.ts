@@ -3,7 +3,7 @@ import type { PaginationMeta } from '@/core/api/types/api-response';
 export type WorkflowStatus = 'draft' | 'active' | 'archived' | 'disabled';
 
 export interface Workflow {
-    id: number;
+    id: string;
     name: string;
     slug: string;
     description: string | null;

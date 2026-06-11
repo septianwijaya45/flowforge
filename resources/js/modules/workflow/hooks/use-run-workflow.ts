@@ -4,7 +4,7 @@ import { triggerApi } from '@/modules/workflow/api/trigger-api';
 
 export function useRunWorkflow() {
     return useMutation({
-        mutationFn: async (workflowId: number) => {
+        mutationFn: async (workflowId: string) => {
             const { data } = await triggerApi.runManual(workflowId);
 
             return data.data.run;
