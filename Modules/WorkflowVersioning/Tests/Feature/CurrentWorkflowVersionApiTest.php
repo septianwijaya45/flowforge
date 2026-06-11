@@ -7,6 +7,7 @@ use Modules\Auth\Models\User;
 use Modules\Tenant\Models\Tenant;
 use Modules\Workflow\Enums\WorkflowStatus;
 use Modules\Workflow\Models\Workflow;
+use Tests\Support\ApiTestContext;
 
 uses(RefreshDatabase::class);
 
@@ -45,23 +46,10 @@ function currentVersionApiContext(): array
         'status' => WorkflowStatus::Draft,
     ]);
 
-    $user = User::factory()->create([
-        'email' => 'current-version-'.uniqid().'@example.com',
-        'password' => 'password',
-    ]);
-
-    $loginResponse = test()->postJson('/api/v1/auth/login', [
-        'email' => $user->email,
-        'password' => 'password',
-    ]);
-
     return [
         'tenant' => $tenant,
         'workflow' => $workflow,
-        'headers' => [
-            'Authorization' => 'Bearer '.$loginResponse->json('data.access_token'),
-            'X-Tenant-Id' => $tenant->id,
-        ],
+        'headers' => ApiTestContext::headers($tenant),
     ];
 }
 

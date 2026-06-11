@@ -8,6 +8,7 @@ use Modules\Tenant\Models\Tenant;
 use Modules\Workflow\Enums\WorkflowStatus;
 use Modules\Workflow\Models\Workflow;
 use Modules\Workflow\Models\WorkflowVersion;
+use Tests\Support\ApiTestContext;
 
 uses(RefreshDatabase::class);
 
@@ -46,23 +47,10 @@ function versioningApiContext(): array
         'status' => WorkflowStatus::Draft,
     ]);
 
-    $user = User::factory()->create([
-        'email' => 'versioning-'.uniqid().'@example.com',
-        'password' => 'password',
-    ]);
-
-    $loginResponse = test()->postJson('/api/v1/auth/login', [
-        'email' => $user->email,
-        'password' => 'password',
-    ]);
-
     return [
         'tenant' => $tenant,
         'workflow' => $workflow,
-        'headers' => [
-            'Authorization' => 'Bearer '.$loginResponse->json('data.access_token'),
-            'X-Tenant-Id' => $tenant->id,
-        ],
+        'headers' => ApiTestContext::headers($tenant),
     ];
 }
 
@@ -172,6 +160,59 @@ it('rolls back by creating a new version from a prior snapshot', function (): vo
     $context['workflow']->refresh();
 
     expect($context['workflow']->current_version_id)->toBe($response->json('data.version.id'));
+});
+
+it('sets the rolled back version as current and preserves version history', function (): void {
+    $context = versioningApiContext();
+
+    $versionOne = WorkflowVersion::query()->create([
+        'tenant_id' => $context['tenant']->id,
+        'workflow_id' => $context['workflow']->id,
+        'version_number' => 1,
+        'definition' => sampleWorkflowDefinition('A'),
+        'definition_hash' => hash('sha256', 'rollback-v1'),
+        'change_summary' => 'Version 1',
+    ]);
+
+    $versionTwo = WorkflowVersion::query()->create([
+        'tenant_id' => $context['tenant']->id,
+        'workflow_id' => $context['workflow']->id,
+        'version_number' => 2,
+        'definition' => sampleWorkflowDefinition('B'),
+        'definition_hash' => hash('sha256', 'rollback-v2'),
+        'change_summary' => 'Version 2',
+    ]);
+
+    $context['workflow']->update(['current_version_id' => $versionTwo->id]);
+
+    $rollbackResponse = $this->postJson(
+        "/api/v1/workflows/{$context['workflow']->id}/versions/{$versionOne->id}/rollback",
+        ['change_summary' => 'Rollback to v1'],
+        $context['headers'],
+    );
+
+    $rolledBackId = $rollbackResponse->json('data.version.id');
+
+    $historyResponse = $this->getJson(
+        "/api/v1/workflows/{$context['workflow']->id}/versions",
+        $context['headers'],
+    );
+
+    $historyResponse->assertSuccessful()
+        ->assertJsonPath('data.pagination.total', 3);
+
+    $currentResponse = $this->getJson(
+        "/api/v1/workflows/{$context['workflow']->id}/versions/current",
+        $context['headers'],
+    );
+
+    $currentResponse->assertSuccessful()
+        ->assertJsonPath('data.version.id', $rolledBackId)
+        ->assertJsonPath('data.version.definition.entry_node_id', 'A');
+
+    $context['workflow']->refresh();
+
+    expect($context['workflow']->current_version_id)->toBe($rolledBackId);
 });
 
 it('rejects invalid workflow definitions', function (): void {
