@@ -7,6 +7,8 @@ namespace Modules\Auth;
 use App\Support\Modules\ModuleServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -15,6 +17,12 @@ use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 use Modules\Auth\Actions\Fortify\CreateNewUser;
 use Modules\Auth\Actions\Fortify\ResetUserPassword;
+use Modules\Auth\Contracts\JwtAuthServiceContract;
+use Modules\Auth\Contracts\JwtTokenManagerContract;
+use Modules\Auth\Guards\JwtGuard;
+use Modules\Auth\Http\Middleware\EnsureRole;
+use Modules\Auth\Services\JwtAuthService;
+use Modules\Auth\Services\JwtTokenManager;
 
 class AuthServiceProvider extends ModuleServiceProvider
 {
@@ -23,8 +31,28 @@ class AuthServiceProvider extends ModuleServiceProvider
         return 'Auth';
     }
 
+    public function register(): void
+    {
+        $this->app->singleton(JwtTokenManagerContract::class, JwtTokenManager::class);
+
+        $this->app->singleton(JwtAuthServiceContract::class, JwtAuthService::class);
+
+        Auth::extend('jwt', function ($app, string $name, array $config): JwtGuard {
+            return new JwtGuard(
+                Auth::createUserProvider($config['provider']),
+                $app->make('request'),
+                $app->make(JwtAuthServiceContract::class),
+            );
+        });
+    }
+
     public function boot(): void
     {
+        /** @var Router $router */
+        $router = $this->app->make(Router::class);
+
+        $router->aliasMiddleware('role', EnsureRole::class);
+
         parent::boot();
 
         $this->configureFortify();

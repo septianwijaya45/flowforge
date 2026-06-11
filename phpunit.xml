@@ -14,6 +14,11 @@
         <testsuite name="Modules">
             <directory>Modules/WorkflowEngine/Tests</directory>
             <directory>Modules/Retry/Tests</directory>
+            <directory>Modules/Tenant/Tests</directory>
+            <directory>Modules/Auth/Tests</directory>
+            <directory>Modules/Workflow/Tests</directory>
+            <directory>Modules/WorkflowVersioning/Tests</directory>
+            <directory>Modules/Trigger/Tests</directory>
         </testsuite>
     </testsuites>
     <source>

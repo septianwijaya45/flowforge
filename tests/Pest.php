@@ -10,3 +10,18 @@ pest()->extend(TestCase::class)
 
 pest()->extend(TestCase::class)
     ->in('../Modules/Retry/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/Tenant/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/Auth/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/Workflow/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/WorkflowVersioning/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/Trigger/Tests');
