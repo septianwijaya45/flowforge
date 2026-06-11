@@ -3,32 +3,21 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Auth\Enums\UserRole;
 use Modules\Auth\Models\User;
 use Modules\Tenant\Models\Tenant;
 use Modules\Workflow\Enums\WorkflowStatus;
 use Modules\Workflow\Models\Workflow;
+use Tests\Support\ApiTestContext;
 
 uses(RefreshDatabase::class);
 
 /**
  * @return array<string, string>
  */
-function workflowApiHeaders(Tenant $tenant, ?User $user = null): array
+function workflowApiHeaders(Tenant $tenant, ?User $user = null, UserRole $role = UserRole::Editor): array
 {
-    $user ??= User::factory()->create([
-        'email' => 'workflow-api-'.uniqid().'@example.com',
-        'password' => 'password',
-    ]);
-
-    $loginResponse = test()->postJson('/api/v1/auth/login', [
-        'email' => $user->email,
-        'password' => 'password',
-    ]);
-
-    return [
-        'Authorization' => 'Bearer '.$loginResponse->json('data.access_token'),
-        'X-Tenant-Id' => $tenant->id,
-    ];
+    return ApiTestContext::headers($tenant, $user, $role);
 }
 
 it('lists workflows with pagination', function (): void {
@@ -86,6 +75,32 @@ it('filters workflows by status and search term', function (): void {
     $response->assertSuccessful()
         ->assertJsonCount(1, 'data.workflows')
         ->assertJsonPath('data.workflows.0.name', 'Billing Pipeline');
+});
+
+it('shows a single workflow', function (): void {
+    $tenant = Tenant::query()->create([
+        'name' => 'Show Tenant',
+        'slug' => 'show-tenant-'.uniqid(),
+        'is_active' => true,
+    ]);
+
+    $workflow = Workflow::query()->create([
+        'tenant_id' => $tenant->id,
+        'name' => 'Visible Workflow',
+        'slug' => 'visible-workflow',
+        'description' => 'Shown via API',
+        'status' => WorkflowStatus::Active,
+    ]);
+
+    $response = $this->getJson(
+        "/api/v1/workflows/{$workflow->id}",
+        workflowApiHeaders($tenant),
+    );
+
+    $response->assertSuccessful()
+        ->assertJsonPath('data.workflow.id', $workflow->id)
+        ->assertJsonPath('data.workflow.name', 'Visible Workflow')
+        ->assertJsonPath('data.workflow.description', 'Shown via API');
 });
 
 it('creates a workflow', function (): void {
@@ -216,6 +231,21 @@ it('isolates workflows by tenant', function (): void {
         'id' => $workflowB->id,
         'name' => 'Tenant B Workflow',
     ]);
+});
+
+it('denies viewers from mutating workflows', function (): void {
+    $tenant = Tenant::query()->create([
+        'name' => 'Viewer Tenant',
+        'slug' => 'viewer-tenant-'.uniqid(),
+        'is_active' => true,
+    ]);
+
+    $response = $this->postJson('/api/v1/workflows', [
+        'name' => 'Blocked Workflow',
+    ], workflowApiHeaders($tenant, role: UserRole::Viewer));
+
+    $response->assertForbidden()
+        ->assertJsonPath('success', false);
 });
 
 it('requires authentication', function (): void {

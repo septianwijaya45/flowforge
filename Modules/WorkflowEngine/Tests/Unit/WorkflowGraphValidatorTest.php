@@ -170,6 +170,21 @@ describe('WorkflowGraphValidator', function (): void {
         ])))->toThrow(InvalidWorkflowEdgeException::class);
     });
 
+    it('rejects duplicate edge ids', function (): void {
+        expect(fn () => workflowGraphValidator()->validate(graphFromDefinition([
+            'entry_node_id' => 'start',
+            'nodes' => [
+                ['id' => 'start', 'type' => 'http', 'config' => []],
+                ['id' => 'mid', 'type' => 'delay', 'config' => []],
+                ['id' => 'finish', 'type' => 'script', 'config' => []],
+            ],
+            'edges' => [
+                ['id' => 'e1', 'source' => 'start', 'target' => 'mid'],
+                ['id' => 'e1', 'source' => 'mid', 'target' => 'finish'],
+            ],
+        ])))->toThrow(InvalidWorkflowEdgeException::class);
+    });
+
     it('rejects graphs without a valid entry node id', function (): void {
         expect(fn () => workflowGraphValidator()->validate(graphFromDefinition([
             'entry_node_id' => 'missing',
@@ -240,6 +255,30 @@ describe('WorkflowGraphValidator', function (): void {
         ])))->toThrow(CycleDetectedException::class);
     });
 
+    it('includes the cycle path in cycle exceptions', function (): void {
+        try {
+            workflowGraphValidator()->validate(graphFromDefinition([
+                'entry_node_id' => 'start',
+                'nodes' => [
+                    ['id' => 'start', 'type' => 'http', 'config' => []],
+                    ['id' => 'a', 'type' => 'delay', 'config' => []],
+                    ['id' => 'b', 'type' => 'condition', 'config' => []],
+                    ['id' => 'finish', 'type' => 'script', 'config' => []],
+                ],
+                'edges' => [
+                    ['id' => 'e1', 'source' => 'start', 'target' => 'a'],
+                    ['id' => 'e2', 'source' => 'a', 'target' => 'b'],
+                    ['id' => 'e3', 'source' => 'b', 'target' => 'a'],
+                    ['id' => 'e4', 'source' => 'b', 'target' => 'finish'],
+                ],
+            ]));
+
+            expect(false)->toBeTrue('Expected CycleDetectedException to be thrown.');
+        } catch (CycleDetectedException $exception) {
+            expect($exception->cyclePath)->toContain('a', 'b');
+        }
+    });
+
     it('rejects unreachable nodes', function (): void {
         expect(fn () => workflowGraphValidator()->validate(graphFromDefinition([
             'entry_node_id' => 'start',
@@ -252,6 +291,27 @@ describe('WorkflowGraphValidator', function (): void {
                 ['id' => 'e1', 'source' => 'start', 'target' => 'finish'],
             ],
         ])))->toThrow(WorkflowValidationException::class);
+    });
+
+    it('reports disconnected islands as multiple root candidates', function (): void {
+        try {
+            workflowGraphValidator()->validate(graphFromDefinition([
+                'entry_node_id' => 'start',
+                'nodes' => [
+                    ['id' => 'start', 'type' => 'http', 'config' => []],
+                    ['id' => 'finish', 'type' => 'script', 'config' => []],
+                    ['id' => 'island', 'type' => 'delay', 'config' => []],
+                ],
+                'edges' => [
+                    ['id' => 'e1', 'source' => 'start', 'target' => 'finish'],
+                ],
+            ]));
+
+            expect(false)->toBeTrue('Expected MissingRootNodeException to be thrown.');
+        } catch (MissingRootNodeException $exception) {
+            expect($exception->getMessage())->toContain('multiple root')
+                ->and($exception->errors['entry_node_id'])->toContain('island');
+        }
     });
 
     it('is bound in the service container', function (): void {

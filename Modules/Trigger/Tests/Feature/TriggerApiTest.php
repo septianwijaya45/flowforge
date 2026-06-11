@@ -13,6 +13,7 @@ use Modules\Workflow\Models\Workflow;
 use Modules\Workflow\Models\WorkflowVersion;
 use Modules\WorkflowEngine\Enums\WorkflowRunStatus;
 use Modules\WorkflowEngine\Enums\WorkflowTriggerType;
+use Tests\Support\ApiTestContext;
 
 uses(RefreshDatabase::class);
 
@@ -57,23 +58,10 @@ function triggerApiContext(): array
 
     $workflow->update(['current_version_id' => $version->id]);
 
-    $user = User::factory()->create([
-        'email' => 'trigger-'.uniqid().'@example.com',
-        'password' => 'password',
-    ]);
-
-    $loginResponse = test()->postJson('/api/v1/auth/login', [
-        'email' => $user->email,
-        'password' => 'password',
-    ]);
-
     return [
         'tenant' => $tenant,
         'workflow' => $workflow->refresh(),
-        'headers' => [
-            'Authorization' => 'Bearer '.$loginResponse->json('data.access_token'),
-            'X-Tenant-Id' => $tenant->id,
-        ],
+        'headers' => ApiTestContext::headers($tenant),
     ];
 }
 
@@ -123,6 +111,22 @@ it('rejects invalid cron expressions', function (): void {
     );
 
     $response->assertUnprocessable();
+});
+
+it('rejects manual triggers when the workflow has no published version', function (): void {
+    $context = triggerApiContext();
+    $context['workflow']->update(['current_version_id' => null]);
+
+    $response = $this->postJson(
+        "/api/v1/workflows/{$context['workflow']->id}/trigger/manual",
+        ['input' => ['source' => 'dashboard']],
+        $context['headers'],
+    );
+
+    $response->assertUnprocessable()
+        ->assertJsonPath('success', false);
+
+    $this->assertDatabaseCount('workflow_runs', 0);
 });
 
 it('fires a manual trigger and creates a pending workflow run', function (): void {
@@ -187,6 +191,38 @@ it('processes due cron triggers', function (): void {
         ->assertJsonPath('data.runs.0.trigger_type', 'schedule');
 
     Carbon::setTestNow();
+});
+
+it('updates and deletes workflow triggers', function (): void {
+    $context = triggerApiContext();
+
+    $createResponse = $this->postJson(
+        "/api/v1/workflows/{$context['workflow']->id}/triggers",
+        ['type' => 'manual', 'name' => 'Original Name'],
+        $context['headers'],
+    );
+
+    $triggerId = $createResponse->json('data.trigger.id');
+
+    $updateResponse = $this->putJson(
+        "/api/v1/workflows/{$context['workflow']->id}/triggers/{$triggerId}",
+        ['name' => 'Renamed Trigger', 'is_active' => false],
+        $context['headers'],
+    );
+
+    $updateResponse->assertSuccessful()
+        ->assertJsonPath('data.trigger.name', 'Renamed Trigger')
+        ->assertJsonPath('data.trigger.is_active', false);
+
+    $deleteResponse = $this->deleteJson(
+        "/api/v1/workflows/{$context['workflow']->id}/triggers/{$triggerId}",
+        [],
+        $context['headers'],
+    );
+
+    $deleteResponse->assertSuccessful();
+
+    $this->assertSoftDeleted('workflow_triggers', ['id' => $triggerId]);
 });
 
 it('lists triggers for a workflow', function (): void {
