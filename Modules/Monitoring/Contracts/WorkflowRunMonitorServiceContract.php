@@ -6,6 +6,7 @@ namespace Modules\Monitoring\Contracts;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Modules\Monitoring\DTOs\ListWorkflowRunsDTO;
+use Modules\Monitoring\DTOs\WorkflowRunMetricsDTO;
 use Modules\WorkflowEngine\Models\WorkflowRun;
 
 interface WorkflowRunMonitorServiceContract
@@ -16,4 +17,6 @@ interface WorkflowRunMonitorServiceContract
     public function paginate(ListWorkflowRunsDTO $filters): LengthAwarePaginator;
 
     public function show(WorkflowRun $run): WorkflowRun;
+
+    public function metrics(int $days = 30): WorkflowRunMetricsDTO;
 }

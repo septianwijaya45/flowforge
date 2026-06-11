@@ -77,6 +77,7 @@ export function useTenantRunsRealtime() {
 
         channel.listen('.run.updated', () => {
             queryClient.invalidateQueries({ queryKey: monitoringKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: ['monitoring', 'metrics'] });
         });
 
         return () => {

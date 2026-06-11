@@ -9,6 +9,7 @@ use Illuminate\Routing\Controller;
 use Modules\Auth\Support\ApiResponse;
 use Modules\Monitoring\Contracts\WorkflowRunMonitorServiceContract;
 use Modules\Monitoring\Http\Requests\ListWorkflowRunsRequest;
+use Modules\Monitoring\Http\Requests\MonitoringMetricsRequest;
 use Modules\Monitoring\Http\Resources\WorkflowRunMonitorResource;
 use Modules\WorkflowEngine\Models\WorkflowRun;
 
@@ -17,6 +18,16 @@ class WorkflowRunMonitorController extends Controller
     public function __construct(
         private readonly WorkflowRunMonitorServiceContract $monitorService,
     ) {}
+
+    public function metrics(MonitoringMetricsRequest $request): JsonResponse
+    {
+        $metrics = $this->monitorService->metrics($request->days());
+
+        return ApiResponse::success(
+            ['metrics' => $metrics->toArray()],
+            'Monitoring metrics retrieved',
+        );
+    }
 
     public function index(ListWorkflowRunsRequest $request): JsonResponse
     {
