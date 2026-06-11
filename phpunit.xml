@@ -16,6 +16,7 @@
             <directory>Modules/Retry/Tests</directory>
             <directory>Modules/Tenant/Tests</directory>
             <directory>Modules/Auth/Tests</directory>
+            <directory>Modules/Workflow/Tests</directory>
         </testsuite>
     </testsuites>
     <source>

@@ -16,3 +16,6 @@ pest()->extend(TestCase::class)
 
 pest()->extend(TestCase::class)
     ->in('../Modules/Auth/Tests');
+
+pest()->extend(TestCase::class)
+    ->in('../Modules/Workflow/Tests');

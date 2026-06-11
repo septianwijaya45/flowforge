@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Tenant;
 
 use App\Support\Modules\ModuleServiceProvider;
+use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Routing\Router;
 use Modules\Tenant\Contracts\TenantContextContract;
 use Modules\Tenant\Contracts\TenantContextResolverContract;
@@ -36,6 +37,10 @@ class TenantServiceProvider extends ModuleServiceProvider
 
         $router->aliasMiddleware('tenant', EnsureTenantContext::class);
         $router->pushMiddlewareToGroup('api', EnsureTenantContext::class);
+
+        /** @var Kernel $kernel */
+        $kernel = $this->app->make(Kernel::class);
+        $kernel->prependToMiddlewarePriority(EnsureTenantContext::class);
 
         parent::boot();
     }
